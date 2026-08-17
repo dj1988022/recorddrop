@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecordDrop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#e2e2e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:60px 24px;line-height:1.6}
+    .lang-switcher{position:absolute;top:20px;right:24px;z-index:100}
+    .lang-switcher select{background:rgba(255,255,255,0.06);color:#e2e2e8;border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:8px 32px 8px 12px;font-size:14px;font-family:inherit;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%236b7280' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+    .lang-switcher select:hover{background:rgba(255,255,255,0.1)}
+    .lang-switcher select option{background:#1a1a24;color:#e2e2e8}
+    .badge{display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);color:#22c55e;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;padding:6px 14px;border-radius:100px;border:1px solid rgba(34,197,94,0.2);margin-bottom:24px}
+    .badge::before{content:'';width:6px;height:6px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    h1{font-size:48px;font-weight:700;color:#fff;text-align:center;line-height:1.1;margin-bottom:16px;letter-spacing:-0.02em}
+    .subtitle{font-size:20px;color:#6b7280;text-align:center;max-width:600px;margin-bottom:48px}
+    .recorder-card{background:linear-gradient(145deg,#13131a,#1a1a24);border:1px solid rgba(255,255,255,0.06);border-radius:24px;padding:48px;width:100%;max-width:640px;text-align:center;box-shadow:0 24px 48px -12px rgba(0,0,0,0.5),0 0 0 1px rgba(255,255,255,0.02);position:relative;overflow:hidden}
+    .recorder-card::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:200px;height:1px;background:linear-gradient(90deg,transparent,rgba(34,197,94,0.4),transparent)}
+    .btn{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border:none;border-radius:14px;font-size:16px;font-weight:600;cursor:pointer;transition:all .2s ease;font-family:inherit}
+    .btn-record{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 4px 20px rgba(239,68,68,0.3)}
+    .btn-record:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(239,68,68,0.4)}
+    .btn-stop{background:linear-gradient(135deg,#374151,#1f2937);color:#fff;display:none}
+    .btn-download{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;display:none;text-decoration:none}
+    .btn-download:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(34,197,94,0.3)}
+    .btn-share{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;display:none;text-decoration:none}
+    .btn-share:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(59,130,246,0.3)}
+    .btn-retake{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;display:none}
+    .btn-retake:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(245,158,11,0.3)}
+    .btn-delete{background:linear-gradient(135deg,#6b7280,#4b5563);color:#fff;display:none}
+    .btn-delete:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(107,114,128,0.3)}
+    .btn-saveas{background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff;display:none}
+    .btn-saveas:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(139,92,246,0.3)}
+    .btn-send{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff}
+    .btn-send:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(59,130,246,0.3)}
+    .preview-container{margin-top:28px;border-radius:16px;overflow:hidden;background:#0a0a0f;border:1px solid rgba(255,255,255,0.06);display:none}
+    .preview{width:100%;display:block}
+    .status{margin-top:20px;font-size:14px;color:#6b7280;min-height:20px}
+    .status.error{color:#ef4444}
+    .status.success{color:#22c55e}
+    .status.recording{color:#ef4444}
+    .progress-bar{width:100%;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:16px;display:none;overflow:hidden}
+    .progress-bar-fill{height:100%;background:linear-gradient(90deg,#22c55e,#16a34a);width:0%;transition:width .3s;border-radius:2px}
+    .link-box{margin-top:16px;padding:12px 16px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:10px;color:#22c55e;font-size:14px;word-break:break-all;display:none;cursor:pointer}
+    .link-box:hover{background:rgba(34,197,94,0.12)}
+    .action-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+    .save-panel{margin-top:16px;padding:14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;display:none;text-align:left}
+    .save-info{display:flex;align-items:center;gap:10px;font-size:13px;color:#6b7280}
+    .save-dot{width:8px;height:8px;border-radius:50%;display:inline-block;background:#22c55e}
+    .save-dot.local{background:#3b82f6}
+    .save-dot.server{background:#22c55e}
+    .share-panel{margin-top:16px;padding:16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;display:none;text-align:left}
+    .share-panel h4{color:#fff;font-size:14px;margin-bottom:12px}
+    .share-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:10px 14px;color:#fff;font-family:inherit;font-size:14px;outline:none;margin-bottom:10px}
+    .share-input:focus{border-color:rgba(34,197,94,0.4);background:rgba(255,255,255,0.06)}
+    .share-input::placeholder{color:#4b5563}
+    .share-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .share-status{margin-top:10px;font-size:13px;min-height:18px}
+    .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:none;align-items:center;justify-content:center;z-index:1000;backdrop-filter:blur(4px);padding:20px}
+    .modal-content{background:linear-gradient(145deg,#13131a,#1a1a24);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:32px;max-width:440px;width:100%;text-align:center;box-shadow:0 24px 48px -12px rgba(0,0,0,0.5)}
+    .modal-content h3{color:#fff;margin-bottom:20px;font-size:20px}
+    .qr-grid{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+    .qr-grid img{width:150px;height:150px;border-radius:12px;background:#fff;padding:4px;object-fit:contain}
+    .payment-btn{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;padding:12px 24px;border-radius:12px;font-weight:600;cursor:pointer;font-family:inherit;font-size:15px;transition:all .2s}
+    .payment-btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(245,158,11,0.3)}
+    .payment-section{margin-top:48px;text-align:center}
+    .features{margin-top:64px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:24px;max-width:960px;width:100%}
+    .feature{background:linear-gradient(145deg,#13131a,#1a1a24);border:1px solid rgba(255,255,255,0.06);padding:32px;border-radius:20px;transition:all .2s ease}
+    .feature:hover{border-color:rgba(255,255,255,0.1);transform:translateY(-2px)}
+    .feature-icon{width:48px;height:48px;background:rgba(34,197,94,0.1);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;margin-bottom:20px}
+    .feature h3{color:#fff;font-size:18px;font-weight:600;margin-bottom:8px}
+    .feature p{color:#6b7280;font-size:15px;line-height:1.6}
+    .advantages{margin-top:64px;max-width:800px;width:100%;background:linear-gradient(145deg,#13131a,#1a1a24);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:40px}
+    .advantages h3{color:#fff;font-size:20px;margin-bottom:24px;text-align:center}
+    .adv-item{display:flex;align-items:flex-start;gap:16px;padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
+    .adv-item:last-child{border-bottom:none}
+    .adv-check{width:28px;height:28px;background:rgba(34,197,94,0.15);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#22c55e;font-weight:700;font-size:16px;flex-shrink:0;margin-top:2px}
+    .adv-text h4{color:#fff;font-size:16px;font-weight:600;margin-bottom:4px}
+    .adv-text p{color:#6b7280;font-size:14px;line-height:1.5}
+    .footer{margin-top:64px;text-align:center;color:#4b5563;font-size:14px}
+    .footer a{color:#6b7280;text-decoration:none;transition:color .2s;margin:0 8px}
+    .footer a:hover{color:#22c55e}
+    @media(max-width:640px){h1{font-size:32px}.subtitle{font-size:17px}.recorder-card{padding:32px 24px}.features{grid-template-columns:1fr}.lang-switcher{top:12px;right:12px}.qr-grid img{width:120px;height:120px}}
+  </style>
+</head>
+<body>
+  <div class="lang-switcher">
+    <select id="langSelect" onchange="changeLang(this.value)">
+      <option value="en">🇺🇸 English</option>
+      <option value="zh">🇨🇳 简体中文</option>
+      <option value="ja">🇯🇵 日本語</option>
+      <option value="es">🇪🇸 Español</option>
+    </select>
+  </div>
+  <div class="badge" data-i18n="badge">Open Source & Self-Hosted</div>
+  <h1>RecordDrop</h1>
+  <p class="subtitle" data-i18n="subtitle">Screen recording that saves locally first. Your video is never lost to a failed upload.</p>
+  <div class="recorder-card">
+    <button class="btn btn-record" id="startBtn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3" fill="currentColor"/></svg>
+      <span data-i18n="startBtn">Start Recording</span>
+    </button>
+    <button class="btn btn-stop" id="stopBtn">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+      <span data-i18n="stopBtn">Stop Recording</span>
+    </button>
+    <div class="action-row" id="actionRow" style="display:none">
+      <a class="btn btn-download" id="downloadBtn" download="recorddrop-recording.webm">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        <span data-i18n="downloadBtn">Download</span>
+      </a>
+      <a class="btn btn-share" id="shareBtn" target="_blank">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <span data-i18n="shareBtn">Open Link</span>
+      </a>
+      <button class="btn btn-saveas" id="saveAsBtn" onclick="saveAsFile()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        <span data-i18n="saveAsBtn">Save As...</span>
+      </button>
+      <button class="btn btn-retake" id="retakeBtn" onclick="confirmReset()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+        <span data-i18n="retakeBtn">Retake</span>
+      </button>
+      <button class="btn btn-delete" id="deleteBtn" onclick="confirmDelete()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        <span data-i18n="deleteBtn">Delete</span>
+      </button>
+    </div>
+    <div class="save-panel" id="savePanel"><div class="save-info"><span class="save-dot" id="saveDot"></span><span id="saveText">Saved</span></div></div>
+    <div class="share-panel" id="sharePanel">
+      <h4>📧 <span data-i18n="sendTo">Send to someone</span></h4>
+      <input type="email" id="shareEmail" class="share-input" placeholder="friend@example.com">
+      <textarea id="shareMsg" class="share-input" placeholder="Optional message..." style="min-height:60px;resize:vertical"></textarea>
+      <div class="share-actions">
+        <button class="btn btn-send" onclick="sendEmailShare()" data-i18n="sendBtn">Send Email</button>
+        <button class="btn btn-secondary" onclick="toggleSharePanel()" data-i18n="cancelBtn">Cancel</button>
+      </div>
+      <p class="share-status" id="shareStatus"></p>
+    </div>
+    <div class="progress-bar" id="progressBar"><div class="progress-bar-fill" id="progressFill"></div></div>
+    <div class="link-box" id="linkBox"></div>
+    <div class="preview-container" id="previewContainer"><video class="preview" id="preview" controls></video></div>
+    <p class="status" id="status" data-i18n="statusIdle">Click the button to start recording your screen</p>
+  </div>
+  <div class="features">
+    <div class="feature"><div class="feature-icon">💾</div><h3 data-i18n="feat1Title">Local-First</h3><p data-i18n="feat1Desc">Your recording is saved to your computer instantly.</p></div>
+    <div class="feature"><div class="feature-icon">⏱️</div><h3 data-i18n="feat2Title">No Time Limits</h3><p data-i18n="feat2Desc">Record as long as you need.</p></div>
+    <div class="feature"><div class="feature-icon">🐳</div><h3 data-i18n="feat3Title">Self-Hosted</h3><p data-i18n="feat3Desc">Deploy with Docker in 30 seconds.</p></div>
+  </div>
+  <div class="advantages">
+    <h3 data-i18n="advTitle">What makes RecordDrop effortless</h3>
+    <div class="adv-item"><div class="adv-check">✓</div><div class="adv-text"><h4 data-i18n="adv1Title">Record without fear</h4><p data-i18n="adv1Desc">Your video hits your hard drive instantly.</p></div></div>
+    <div class="adv-item"><div class="adv-check">✓</div><div class="adv-text"><h4 data-i18n="adv2Title">Share in one click</h4><p data-i18n="adv2Desc">Stop recording → link copied → paste anywhere.</p></div></div>
+    <div class="adv-item"><div class="adv-check">✓</div><div class="adv-text"><h4 data-i18n="adv3Title">Retake or delete anytime</h4><p data-i18n="adv3Desc">Mess up? Hit Retake and start over.</p></div></div>
+    <div class="adv-item"><div class="adv-check">✓</div><div class="adv-text"><h4 data-i18n="adv4Title">No seat tax</h4><p data-i18n="adv4Desc">Your team grows, your bill doesn't.</p></div></div>
+    <div class="adv-item"><div class="adv-check">✓</div><div class="adv-text"><h4 data-i18n="adv5Title">Your data, your rules</h4><p data-i18n="adv5Desc">Self-host with Docker.</p></div></div>
+  </div>
+  <div class="payment-section" id="paymentSection" style="display:none">
+    <button class="payment-btn" onclick="openPayment()" data-i18n="supportBtn">☕ Support RecordDrop</button>
+  </div>
+  <div class="footer">
+    <p><a href="/about">About</a> · <a href="/terms">Terms</a> · <a href="/feedback">Feedback</a> · <a href="#">GitHub</a></p>
+    <p style="margin-top:8px"><span data-i18n="footer1">Open source on</span> <a href="#">GitHub</a></p>
+  </div>
+  <div class="modal-overlay" id="paymentModal" onclick="if(event.target===this)closePayment()">
+    <div class="modal-content">
+      <h3 id="paymentModalTitle">Support RecordDrop</h3>
+      <div class="qr-grid" id="qrGrid"></div>
+      <button class="btn btn-secondary" onclick="closePayment()" data-i18n="closeBtn">Close</button>
+    </div>
+  </div>
+<script>
+const i18n={
+en:{badge:"Open Source & Self-Hosted",subtitle:"Screen recording that saves locally first.",startBtn:"Start Recording",stopBtn:"Stop Recording",downloadBtn:"Download",shareBtn:"Open Link",retakeBtn:"Retake",deleteBtn:"Delete",saveAsBtn:"Save As...",sendTo:"Send to someone",sendBtn:"Send Email",cancelBtn:"Cancel",emailPlaceholder:"friend@example.com",msgPlaceholder:"Optional message...",statusIdle:"Click the button to start recording your screen",statusRec:"🔴 Recording... (video will be saved locally when you stop)",statusSaved:"✅ Saved locally! Uploading to generate share link...",statusLink:"✅ Link copied! Paste it anywhere.",statusFail:"⚠️ Upload failed, but your video is safely saved locally.",statusErr:"❌ Screen recording requires HTTPS.",statusDeleted:"🗑️ Video deleted. Ready to record again.",statusCleared:"🗑️ Recording cleared. Ready to start over.",statusSaveLocal:"💾 Saved to your computer. Click 'Save As' to choose folder.",statusSaveAs:"💾 File saved to chosen location.",confirmReset:"Discard current recording and start over?",confirmDelete:"Permanently delete this video from the server?",feat1Title:"Local-First",feat1Desc:"Your recording is saved to your computer instantly.",feat2Title:"No Time Limits",feat2Desc:"Record as long as you need.",feat3Title:"Self-Hosted in One Command",feat3Desc:"Deploy with Docker in 30 seconds.",advTitle:"What makes RecordDrop effortless",adv1Title:"Record without fear",adv1Desc:"Your video hits your hard drive instantly.",adv2Title:"Share in one click",adv2Desc:"Stop recording → link copied → paste anywhere.",adv3Title:"Retake or delete anytime",adv3Desc:"Mess up? Hit Retake.",adv4Title:"No seat tax",adv4Desc:"One flat price for everyone.",adv5Title:"Your data, your rules",adv5Desc:"Self-host with Docker.",supportBtn:"☕ Support RecordDrop",closeBtn:"Close",footer1:"Open source on",footer2:"Deploy with"},
+zh:{badge:"开源 & 可自托管",subtitle:"本地优先的屏幕录制工具。",startBtn:"开始录制",stopBtn:"停止录制",downloadBtn:"下载",shareBtn:"打开链接",retakeBtn:"重新录制",deleteBtn:"删除",saveAsBtn:"另存为...",sendTo:"发送给他人",sendBtn:"发送邮件",cancelBtn:"取消",emailPlaceholder:"朋友邮箱@example.com",msgPlaceholder:"留言（可选）...",statusIdle:"点击按钮开始录制屏幕",statusRec:"🔴 正在录制...（停止后会自动保存到本地）",statusSaved:"✅ 已本地保存！正在上传生成分享链接...",statusLink:"✅ 链接已复制！可以粘贴到任何地方。",statusFail:"⚠️ 上传失败，但您的视频已安全保存在本地。",statusErr:"❌ 屏幕录制需要 HTTPS。",statusDeleted:"🗑️ 视频已删除。可以重新录制了。",statusCleared:"🗑️ 录制已清空。可以重新开始了。",statusSaveLocal:"💾 已保存到您的电脑。点击「另存为」可选择文件夹。",statusSaveAs:"💾 文件已保存到指定位置。",confirmReset:"放弃当前录制并重新开始？",confirmDelete:"从服务器永久删除此视频？",feat1Title:"本地优先",feat1Desc:"录制瞬间保存到您的电脑。",feat2Title:"无时长限制",feat2Desc:"想录多久就录多久。",feat3Title:"一键自托管",feat3Desc:"30 秒内用 Docker 部署。",advTitle:"RecordDrop 的便利之处",adv1Title:"录制无忧",adv1Desc:"停止录制的瞬间，视频就已保存。",adv2Title:"一键分享",adv2Desc:"停止录制 → 链接自动复制。",adv3Title:"随时重录或删除",adv3Desc:"录错了？点击重录立刻重新开始。",adv4Title:"不按座位收费",adv4Desc:"一次性买断全员可用。",adv5Title:"数据由您掌控",adv5Desc:"用 Docker 自托管。",supportBtn:"☕ 支持 RecordDrop",closeBtn:"关闭",footer1:"开源代码在",footer2:"部署命令"},
+ja:{badge:"オープンソース & セルフホスト",subtitle:"ローカル優先の画面録画ツール。",startBtn:"録画を開始",stopBtn:"録画を停止",downloadBtn:"ダウンロード",shareBtn:"リンクを開く",retakeBtn:"再録画",deleteBtn:"削除",saveAsBtn:"名前を付けて保存...",sendTo:"誰かに送信",sendBtn:"メールを送信",cancelBtn:"キャンセル",emailPlaceholder:"friend@example.com",msgPlaceholder:"任意のメッセージ...",statusIdle:"ボタンをクリックして画面録画を開始",statusRec:"🔴 録画中...（停止するとローカルに保存されます）",statusSaved:"✅ ローカルに保存しました！共有リンクを生成中...",statusLink:"✅ リンクをコピーしました！",statusFail:"⚠️ アップロードに失敗しましたが、動画はローカルに安全に保存されています。",statusDeleted:"🗑️ 動画を削除しました。",statusCleared:"🗑️ 録画をクリアしました。",statusSaveLocal:"💾 コンピュータに保存されました。",statusSaveAs:"💾 選択した場所に保存しました。",confirmReset:"現在の録画を破棄してやり直しますか？",confirmDelete:"サーバーからこの動画を永久に削除しますか？",feat1Title:"ローカル優先",feat1Desc:"録画は即座にコンピュータに保存されます。",feat2Title:"時間制限なし",feat2Desc:"必要なだけ録画できます。",feat3Title:"ワンコマンドでセルフホスト",feat3Desc:"Docker で30秒でデプロイ。",advTitle:"RecordDrop が手軽な理由",adv1Title:"安心して録画",adv1Desc:"録画停止と同時にハードディスクに保存。",adv2Title:"ワンクリック共有",adv2Desc:"録画停止 → リンクをクリップボードにコピー。",adv3Title:"いつでも再録画・削除",adv3Desc:"ミスがあれば「再録画」ですぐやり直し。",adv4Title:"座席課金なし",adv5Title:"データはあなたのもの",supportBtn:"☕ RecordDrop を支援",closeBtn:"閉じる",footer1:"オープンソース：",footer2:"デプロイ："},
+es:{badge:"Código Abierto y Autoalojado",subtitle:"Grabación de pantalla que guarda localmente primero.",startBtn:"Iniciar Grabación",stopBtn:"Detener Grabación",downloadBtn:"Descargar",shareBtn:"Abrir Enlace",retakeBtn:"Regrabar",deleteBtn:"Eliminar",saveAsBtn:"Guardar como...",sendTo:"Enviar a alguien",sendBtn:"Enviar Email",cancelBtn:"Cancelar",emailPlaceholder:"amigo@example.com",msgPlaceholder:"Mensaje opcional...",statusIdle:"Haz clic en el botón para iniciar la grabación",statusRec:"🔴 Grabando... (el video se guardará localmente al detener)",statusSaved:"✅ ¡Guardado localmente! Subiendo para generar enlace...",statusLink:"✅ ¡Enlace copiado! Pégalo en cualquier lugar.",statusFail:"⚠️ La subida falló, pero tu video está seguro localmente.",statusErr:"❌ La grabación de pantalla requiere HTTPS.",statusDeleted:"🗑️ Video eliminado. Listo para grabar de nuevo.",statusCleared:"🗑️ Grabación descartada.",statusSaveLocal:"💾 Guardado en tu computadora.",statusSaveAs:"💾 Archivo guardado en la ubicación elegida.",confirmReset:"¿Descartar la grabación actual y empezar de nuevo?",confirmDelete:"¿Eliminar permanentemente este video del servidor?",feat1Title:"Primero Local",feat1Desc:"Tu grabación se guarda instantáneamente en tu computadora.",feat2Title:"Sin Límites de Tiempo",feat2Desc:"Graba todo lo que necesites.",feat3Title:"Autoalojado en un Comando",feat3Desc:"Despliega con Docker en 30 segundos.",advTitle:"Lo que hace RecordDrop effortless",adv1Title:"Graba sin miedo",adv1Desc:"Tu video llega al disco duro al instante.",adv2Title:"Comparte en un clic",adv3Title:"Regraba o elimina cuando quieras",adv4Title:"Sin impuesto por asiento",adv5Title:"Tus datos, tus reglas",supportBtn:"☕ Apoya RecordDrop",closeBtn:"Cerrar",footer1:"Código abierto en",footer2:"Despliega con"}
+};
+
+let currentLang=localStorage.getItem('recorddrop-lang')||navigator.language.slice(0,2)||'en';
+if(!i18n[currentLang])currentLang='en';
+let currentVideoId=null,currentBlob=null,paymentCfg=null;
+
+function changeLang(lang){if(!i18n[lang])return;currentLang=lang;localStorage.setItem('recorddrop-lang',lang);document.getElementById('langSelect').value=lang;applyLang()}
+function applyLang(){const t=i18n[currentLang];document.querySelectorAll('[data-i18n]').forEach(el=>{const k=el.getAttribute('data-i18n');if(t[k])el.textContent=t[k]});document.querySelectorAll('[data-i18n-placeholder]').forEach(el=>{const k=el.getAttribute('data-i18n-placeholder');if(t[k])el.placeholder=t[k]});document.documentElement.lang=currentLang==='zh'?'zh-CN':currentLang;if(paymentCfg&&paymentCfg.title)document.getElementById('paymentModalTitle').textContent=paymentCfg.title}
+document.getElementById('langSelect').value=currentLang;applyLang();
+
+let recorder,stream,chunks=[];
+const startBtn=document.getElementById('startBtn'),stopBtn=document.getElementById('stopBtn'),actionRow=document.getElementById('actionRow'),downloadBtn=document.getElementById('downloadBtn'),shareBtn=document.getElementById('shareBtn'),retakeBtn=document.getElementById('retakeBtn'),deleteBtn=document.getElementById('deleteBtn'),saveAsBtn=document.getElementById('saveAsBtn'),preview=document.getElementById('preview'),previewContainer=document.getElementById('previewContainer'),status=document.getElementById('status'),progressBar=document.getElementById('progressBar'),progressFill=document.getElementById('progressFill'),linkBox=document.getElementById('linkBox'),savePanel=document.getElementById('savePanel'),saveDot=document.getElementById('saveDot'),saveText=document.getElementById('saveText'),sharePanel=document.getElementById('sharePanel'),shareStatus=document.getElementById('shareStatus');
+const t=()=>i18n[currentLang];
+
+function resetRecorder(){recorder=null;stream=null;chunks=[];currentVideoId=null;currentBlob=null;startBtn.style.display='inline-flex';stopBtn.style.display='none';actionRow.style.display='none';previewContainer.style.display='none';preview.src='';progressBar.style.display='none';progressFill.style.width='0%';linkBox.style.display='none';linkBox.textContent='';savePanel.style.display='none';sharePanel.style.display='none';shareStatus.textContent='';status.textContent=t().statusIdle;status.className='status'}
+function confirmReset(){if(confirm(t().confirmReset))resetRecorder()}
+async function deleteRecording(){if(!currentVideoId)return resetRecorder();try{await fetch('/uploads/'+currentVideoId,{method:'DELETE'})}catch(e){}resetRecorder();status.textContent=t().statusDeleted;status.className='status success'}
+function confirmDelete(){if(confirm(t().confirmDelete))deleteRecording()}
+
+async function saveAsFile(){if(!currentBlob)return;try{if('showSaveFilePicker' in window){const handle=await window.showSaveFilePicker({suggestedName:'recorddrop-recording.webm',types:[{description:'WebM Video',accept:{'video/webm':['.webm']}}]});const writable=await handle.createWritable();await writable.write(currentBlob);await writable.close();saveDot.className='save-dot local';saveText.textContent=t().statusSaveAs+' ('+handle.name+')';status.textContent=t().statusSaveAs;status.className='status success'}else{downloadBtn.click()}}catch(err){if(err.name!=='AbortError')downloadBtn.click()}}
+
+function toggleSharePanel(){sharePanel.style.display=sharePanel.style.display==='block'?'none':'block'}
+async function sendEmailShare(){const to=document.getElementById('shareEmail').value.trim(),msg=document.getElementById('shareMsg').value.trim();if(!to){shareStatus.textContent='❌ Please enter email';shareStatus.style.color='#ef4444';return}shareStatus.textContent='⏳ Sending...';shareStatus.style.color='#6b7280';try{const res=await fetch('/api/share/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,videoUrl:shareBtn.href||linkBox.textContent,message:msg})});if(res.ok){shareStatus.textContent='✅ Email sent!';shareStatus.style.color='#22c55e';document.getElementById('shareEmail').value='';document.getElementById('shareMsg').value='';setTimeout(()=>{sharePanel.style.display='none';shareStatus.textContent=''},2000)}else{const err=await res.json();shareStatus.textContent='❌ '+(err.error||'Failed');shareStatus.style.color='#ef4444'}}catch(e){shareStatus.textContent='❌ Network error';shareStatus.style.color='#ef4444'}}
+
+startBtn.onclick=async()=>{try{stream=await navigator.mediaDevices.getDisplayMedia({video:{width:1920,height:1080,frameRate:30},audio:true});recorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9,opus'});chunks=[];recorder.ondataavailable=e=>{if(e.data.size>0)chunks.push(e.data)};recorder.onstop=async()=>{currentBlob=new Blob(chunks,{type:'video/webm'});const url=URL.createObjectURL(currentBlob);downloadBtn.href=url;preview.src=url;previewContainer.style.display='block';status.textContent=t().statusSaved;status.className='status success';savePanel.style.display='block';saveDot.className='save-dot local';saveText.textContent=t().statusSaveLocal;setTimeout(()=>downloadBtn.click(),300);await uploadVideo(currentBlob)};recorder.start(1000);startBtn.style.display='none';stopBtn.style.display='inline-flex';status.textContent=t().statusRec;status.className='status recording'}catch(err){status.textContent=t().statusErr;status.className='status error';console.error(err)}};
+
+stopBtn.onclick=()=>{recorder.stop();stream.getTracks().forEach(t=>t.stop());stopBtn.style.display='none';progressBar.style.display='block'};
+
+async function uploadVideo(blob){const formData=new FormData();formData.append('video',blob,'recording.webm');try{progressFill.style.width='30%';const res=await fetch('/upload',{method:'POST',body:formData});progressFill.style.width='70%';if(!res.ok)throw new Error('Upload failed');const data=await res.json();progressFill.style.width='100%';currentVideoId=data.id;shareBtn.href=data.url;actionRow.style.display='flex';linkBox.textContent=data.url;linkBox.style.display='block';saveDot.className='save-dot server';saveText.textContent=(currentLang==='zh'?'✅ 已保存到本地 + 服务器：':'✅ Saved locally + server: ')+data.serverPath;navigator.clipboard.writeText(data.url).then(()=>{status.textContent=t().statusLink}).catch(()=>{status.textContent='✅ Upload complete! Link: '+data.url});setTimeout(()=>progressBar.style.display='none',1000)}catch(err){progressBar.style.display='none';status.textContent=t().statusFail;status.className='status error';console.error(err)}}
+
+linkBox.onclick=()=>{navigator.clipboard.writeText(linkBox.textContent).then(()=>{const original=linkBox.textContent;linkBox.textContent=currentLang==='zh'?'已复制！':'Copied!';setTimeout(()=>linkBox.textContent=original,1500)})};
+
+async function loadPaymentConfig(){try{const res=await fetch('/api/payment/config');paymentCfg=await res.json();if(paymentCfg.enabled){document.getElementById('paymentSection').style.display='block';if(paymentCfg.title)document.getElementById('paymentModalTitle').textContent=paymentCfg.title}}catch(e){}}
+function openPayment(){if(!paymentCfg)return;const grid=document.getElementById('qrGrid');let html='';if(paymentCfg.wechatQr)html+='<div><img src="'+paymentCfg.wechatQr+'" alt="WeChat Pay"></div>';if(paymentCfg.alipayQr)html+='<div><img src="'+paymentCfg.alipayQr+'" alt="Alipay"></div>';if(paymentCfg.paypalLink)html+='<a href="'+paymentCfg.paypalLink+'" target="_blank" class="btn btn-primary" style="background:linear-gradient(135deg,#003087,#0070ba);text-decoration:none;">PayPal</a>';if(paymentCfg.stripeLink)html+='<a href="'+paymentCfg.stripeLink+'" target="_blank" class="btn btn-primary" style="background:linear-gradient(135deg,#635bff,#0a2540);text-decoration:none;">Stripe</a>';grid.innerHTML=html||'<p style="color:#6b7280;">No payment methods configured.</p>';document.getElementById('paymentModal').style.display='flex'}
+function closePayment(){document.getElementById('paymentModal').style.display='none'}
+loadPaymentConfig();
+</script>
+</body>
+</html>

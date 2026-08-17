@@ -1,0 +1,8 @@
+node_modules/
+uploads/
+metadata/
+.env
+.env.*
+*.log
+.DS_Store
+npm-debug.log*

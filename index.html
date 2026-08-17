@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RecordDrop — Screen recording that saves locally first</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;background:#0a0a0a;color:#e5e5e5;line-height:1.6;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:60px 20px}
+.container{max-width:720px;width:100%}
+h1{font-size:2.8rem;font-weight:700;margin-bottom:12px;background:linear-gradient(135deg,#fff 0%,#888 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-0.02em}
+.subtitle{color:#666;font-size:1.15rem;margin-bottom:48px;max-width:560px}
+.recorder-card{background:#141414;border:1px solid #222;border-radius:16px;padding:48px 40px;text-align:center;margin-bottom:24px}
+.btn-record{background:#fff;color:#000;border:none;padding:16px 40px;font-size:1.1rem;font-weight:600;border-radius:12px;cursor:pointer;transition:all .2s;display:inline-flex;align-items:center;gap:8px}
+.btn-record:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(255,255,255,.15)}
+.btn-record:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.recording-indicator{display:none;align-items:center;justify-content:center;gap:12px;margin-top:24px}
+.recording-indicator.active{display:flex}
+.red-dot{width:10px;height:10px;background:#ff4444;border-radius:50%;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.timer{font-family:ui-monospace,SFMono-Regular,monospace;font-size:1.1rem;color:#ff4444}
+.result-card{display:none;background:#141414;border:1px solid #222;border-radius:16px;padding:32px;margin-bottom:24px}
+.result-card.active{display:block}
+.upload-status{display:flex;align-items:center;gap:8px;color:#4ade80;font-weight:500;margin-bottom:16px;font-size:1rem}
+.link-box{background:#0a0a0a;border:1px solid #2a2a2a;border-radius:10px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;word-break:break-all}
+.link-box a{color:#60a5fa;text-decoration:none;font-size:.95rem}
+.link-box a:hover{text-decoration:underline}
+.btn-copy{background:#222;color:#e5e5e5;border:1px solid #333;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:.85rem;white-space:nowrap;transition:all .15s}
+.btn-copy:hover{background:#333;border-color:#444}
+.video-preview{width:100%;border-radius:12px;margin-bottom:20px;background:#000;display:none;border:1px solid #222}
+.video-preview.active{display:block}
+.action-bar{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+.btn-stop{background:#dc2626;color:#fff;border:none;padding:10px 22px;border-radius:8px;cursor:pointer;font-weight:500;font-size:.95rem;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn-stop:hover{background:#b91c1c}
+.btn-clear{background:transparent;color:#888;border:1px solid #333;padding:10px 22px;border-radius:8px;cursor:pointer;font-weight:500;font-size:.95rem;display:inline-flex;align-items:center;gap:6px;transition:all .15s}
+.btn-clear:hover{color:#fff;border-color:#666;background:#1a1a1a}
+.purchase-box{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border:1px solid #2a2a4a;border-radius:12px;padding:24px;margin-top:4px}
+.purchase-box h3{margin-bottom:6px;color:#fff;font-size:1.1rem}
+.purchase-box p{color:#888;font-size:.9rem;margin-bottom:14px}
+.price-tag{font-size:2rem;font-weight:700;color:#fff;margin-bottom:14px}
+.price-tag span{font-size:.95rem;color:#666;font-weight:400}
+.btn-buy{display:inline-block;background:#fbbf24;color:#000;text-decoration:none;padding:12px 28px;border-radius:10px;font-weight:700;font-size:.95rem;transition:all .2s}
+.btn-buy:hover{transform:translateY(-2px);box-shadow:0 8px 25px rgba(251,191,36,.25)}
+.license-note{margin-top:12px;font-size:.8rem;color:#555}
+.license-note a{color:#888;text-decoration:none}
+.license-note a:hover{color:#aaa}
+.features{margin-top:64px}
+.features h2{font-size:1.3rem;font-weight:600;margin-bottom:24px;color:#fff}
+.feature-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+.feature-card{background:#141414;border:1px solid #222;border-radius:12px;padding:24px}
+.feature-card h3{font-size:1rem;margin-bottom:8px;color:#fff;display:flex;align-items:center;gap:8px}
+.feature-card p{color:#666;font-size:.9rem;line-height:1.6}
+.footer{margin-top:80px;text-align:center;color:#444;font-size:.85rem}
+.footer a{color:#666;text-decoration:none;margin:0 8px}
+.footer a:hover{color:#888}
+.hint-text{margin-top:16px;color:#444;font-size:.9rem}
+nav{text-align:center;margin-bottom:32px}
+nav a{color:#666;text-decoration:none;margin:0 12px;font-size:.9rem}
+nav a:hover{color:#aaa}
+</style>
+</head>
+<body>
+<div class="container">
+<nav>
+  <a href="/" style="color:#fff;font-weight:600">Home</a>
+  <a href="/about.html">About</a>
+  <a href="/terms.html">Terms</a>
+  <a href="/feedback.html">Feedback</a>
+</nav>
+
+<h1>RecordDrop</h1>
+<p class="subtitle">Screen recording that saves locally first. Your video is never lost to a failed upload — even if your internet dies.</p>
+
+<div class="recorder-card" id="recorderCard">
+  <button class="btn-record" id="startBtn" onclick="startRecording()"><span>⚡</span> Start Recording</button>
+  <button class="btn-record" id="stopBtn" style="display:none" onclick="stopRecording()"><span>⏹</span> Stop Recording</button>
+  <div class="recording-indicator" id="recordingIndicator"><div class="red-dot"></div><span>Recording</span><span class="timer" id="timer">00:00</span></div>
+  <p class="hint-text" id="hintText">Click to choose screen, window, or tab to record</p>
+</div>
+
+<div class="result-card" id="resultCard">
+  <div class="upload-status"><span>✅</span><span>Upload complete!</span></div>
+  <div class="link-box"><a href="#" id="resultLink" target="_blank">https://recorddrop.site/v/...</a><button class="btn-copy" onclick="copyLink()">Copy link</button></div>
+  <video class="video-preview" id="videoPreview" controls></video>
+  <div class="action-bar">
+    <button class="btn-stop" onclick="stopPlayback()">⏹ Stop playback</button>
+    <button class="btn-clear" onclick="clearRecording()">🗑 Clear & Retake</button>
+  </div>
+  <div class="purchase-box">
+    <h3>🖥️ Desktop Client</h3>
+    <p>Offline recording, local export, no time limits, no watermarks. One-time purchase.</p>
+    <div class="price-tag">$39 <span>one-time</span></div>
+    <a href="https://recorddrop.lemonsqueezy.com/buy/xxxxxx" class="btn-buy" target="_blank">Buy License →</a>
+    <p class="license-note">Already have a license? <a href="#">Enter activation code</a></p>
+  </div>
+</div>
+
+<div class="features">
+  <h2>What makes RecordDrop effortless</h2>
+  <div class="feature-grid">
+    <div class="feature-card"><h3><span>💾</span> Local-First</h3><p>Your recording hits your hard drive the instant you stop. Network failure? Your file is still safe.</p></div>
+    <div class="feature-card"><h3><span>⏱️</span> No Time Limits</h3><p>Record as long as you need. No 5-minute cap, no lifetime video limit.</p></div>
+    <div class="feature-card"><h3><span>🐳</span> Self-Hosted in One Command</h3><p>Deploy with Docker in 30 seconds. Your videos stay on your server. No subscription.</p></div>
+    <div class="feature-card"><h3><span>✓</span> Share in One Click</h3><p>Stop recording → link copied to clipboard → paste anywhere. No login, no waiting.</p></div>
+    <div class="feature-card"><h3><span>✓</span> Retake or Delete Anytime</h3><p>Mess up? Hit Retake and start over. Want it gone? Delete removes it permanently.</p></div>
+    <div class="feature-card"><h3><span>✓</span> No Seat Tax</h3><p>Your team grows, your bill doesn't. One flat price for everyone, or free if you self-host.</p></div>
+  </div>
+</div>
+
+<div class="footer">
+  <a href="/about.html">About</a> · <a href="/terms.html">Terms</a> · <a href="/feedback.html">Feedback</a> · <a href="https://github.com/yourname/recorddrop" target="_blank">GitHub</a>
+  <p style="margin-top:12px">Open source on GitHub · Deploy: <code style="background:#1a1a1a;padding:2px 6px;border-radius:4px">docker run -p 3000:3000 recorddrop</code></p>
+</div>
+</div>
+
+<script>
+let mediaRecorder, recordedChunks=[], stream, timerInterval, seconds=0;
+let videoBlob, videoUrl, currentVideoId;
+function fmt(s){const m=Math.floor(s/60).toString().padStart(2,'0');const sec=(s%60).toString().padStart(2,'0');return `${m}:${sec}`;}
+async function startRecording(){
+  try{
+    stream=await navigator.mediaDevices.getDisplayMedia({video:{mediaSource:'screen'},audio:true});
+    recordedChunks=[];
+    mediaRecorder=new MediaRecorder(stream,{mimeType:'video/webm;codecs=vp9'});
+    mediaRecorder.ondataavailable=e=>{if(e.data.size>0)recordedChunks.push(e.data);};
+    mediaRecorder.onstop=async()=>{
+      videoBlob=new Blob(recordedChunks,{type:'video/webm'});
+      videoUrl=URL.createObjectURL(videoBlob);
+      await saveLocally(videoBlob);
+      await uploadVideo(videoBlob);
+    };
+    mediaRecorder.start(1000);
+    document.getElementById('startBtn').style.display='none';
+    document.getElementById('stopBtn').style.display='inline-block';
+    document.getElementById('recordingIndicator').classList.add('active');
+    document.getElementById('hintText').textContent='Recording... Click Stop to finish';
+    seconds=0;
+    timerInterval=setInterval(()=>{seconds++;document.getElementById('timer').textContent=fmt(seconds);},1000);
+    stream.getVideoTracks()[0].onended=()=>stopRecording();
+  }catch(err){alert('Could not start recording: '+err.message);}
+}
+function stopRecording(){
+  if(mediaRecorder&&mediaRecorder.state!=='inactive')mediaRecorder.stop();
+  if(stream)stream.getTracks().forEach(t=>t.stop());
+  clearInterval(timerInterval);
+  document.getElementById('stopBtn').style.display='none';
+  document.getElementById('recordingIndicator').classList.remove('active');
+}
+async function saveLocally(blob){
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download=`recorddrop-${Date.now()}.webm`;a.click();
+  URL.revokeObjectURL(url);
+}
+async function uploadVideo(blob){
+  const fd=new FormData();
+  fd.append('video',blob,'recording.webm');
+  try{
+    const res=await fetch('/api/upload',{method:'POST',body:fd});
+    const data=await res.json();
+    currentVideoId=data.id;
+    const link=`${window.location.origin}/v/${data.id}`;
+    document.getElementById('resultCard').classList.add('active');
+    document.getElementById('recorderCard').style.display='none';
+    document.getElementById('resultLink').href=link;
+    document.getElementById('resultLink').textContent=link;
+    const preview=document.getElementById('videoPreview');
+    preview.src=videoUrl;preview.classList.add('active');
+    await navigator.clipboard.writeText(link);
+  }catch(err){
+    console.error('Upload failed:',err);
+    alert('Upload failed, but your video was saved to Downloads ✅');
+  }
+}
+function stopPlayback(){
+  const v=document.getElementById('videoPreview');
+  v.pause();v.currentTime=0;
+}
+async function clearRecording(){
+  stopPlayback();
+  if(currentVideoId){try{await fetch(`/api/delete/${currentVideoId}`,{method:'DELETE'});}catch(e){}}
+  if(videoUrl)URL.revokeObjectURL(videoUrl);
+  videoBlob=null;recordedChunks=[];currentVideoId=null;
+  document.getElementById('resultCard').classList.remove('active');
+  document.getElementById('videoPreview').classList.remove('active');
+  document.getElementById('recorderCard').style.display='block';
+  document.getElementById('startBtn').style.display='inline-block';
+  document.getElementById('hintText').textContent='Click to choose screen, window, or tab to record';
+  document.getElementById('timer').textContent='00:00';
+}
+async function copyLink(){
+  const link=document.getElementById('resultLink').href;
+  await navigator.clipboard.writeText(link);
+  const btn=event.target;const old=btn.textContent;
+  btn.textContent='Copied!';setTimeout(()=>btn.textContent=old,2000);
+}
+</script>
+</body>
+</html>
