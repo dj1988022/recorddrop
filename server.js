@@ -48,14 +48,33 @@ const upload = multer({ storage, limits: { fileSize: 500 * 1024 * 1024 } });
 
 app.use(express.static('public'));
 
+// ===== Health Check =====
+app.get('/health', (req, res) => res.json({
+  status: 'ok',
+  version: '0.2.0',
+  uptime: process.uptime(),
+  timestamp: new Date().toISOString()
+}));
+
+// ===== Core API =====
 app.post('/upload', upload.single('video'), (req, res) => {
   if (!req.file) return res.status(400).json({ error: 'No file' });
   const id = req.file.filename.replace('.webm', '');
   const host = req.get('host');
   const protocol = req.headers['x-forwarded-proto'] || req.protocol;
-  const meta = { id, createdAt: new Date().toISOString(), filename: req.file.filename, views: 0, viewLog: [] };
+  const meta = {
+    id,
+    createdAt: new Date().toISOString(),
+    filename: req.file.filename,
+    views: 0,
+    viewLog: []
+  };
   fs.writeFileSync(path.join(metaDir, `${id}.json`), JSON.stringify(meta, null, 2));
-  res.json({ url: `${protocol}://${host}/v/${id}`, id, serverPath: `/uploads/${req.file.filename}` });
+  res.json({
+    url: `${protocol}://${host}/v/${id}`,
+    id,
+    serverPath: `/uploads/${req.file.filename}`
+  });
 });
 
 app.delete('/uploads/:id', (req, res) => {
@@ -68,6 +87,7 @@ app.delete('/uploads/:id', (req, res) => {
   res.json({ success: true });
 });
 
+// ===== Email Sharing =====
 app.post('/api/share/email', async (req, res) => {
   if (!mailTransporter) return res.status(503).json({ error: 'SMTP not configured' });
   const { to, videoUrl, message, senderName } = req.body;
@@ -96,8 +116,10 @@ app.post('/api/share/email', async (req, res) => {
   }
 });
 
+// ===== Payment Config =====
 app.get('/api/payment/config', (req, res) => res.json(paymentConfig));
 
+// ===== Messages / Feedback =====
 app.get('/api/messages', (req, res) => {
   try { res.json(JSON.parse(fs.readFileSync(msgFile, 'utf8')).reverse()); }
   catch(e) { res.json([]); }
@@ -120,6 +142,17 @@ app.post('/api/messages', (req, res) => {
   res.json(newMsg);
 });
 
+// ===== Views =====
+app.get('/api/views/:id', (req, res) => {
+  const metaFile = path.join(metaDir, `${req.params.id}.json`);
+  if (!fs.existsSync(metaFile)) return res.json({ views: 0 });
+  try {
+    const meta = JSON.parse(fs.readFileSync(metaFile, 'utf8'));
+    res.json({ views: meta.views || 0 });
+  } catch(e) { res.json({ views: 0 }); }
+});
+
+// ===== Video Player Page =====
 app.get('/v/:id', (req, res) => {
   const file = path.join(uploadDir, `${req.params.id}.webm`);
   const metaFile = path.join(metaDir, `${req.params.id}.json`);
@@ -135,14 +168,9 @@ app.get('/v/:id', (req, res) => {
   res.send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Video - RecordDrop</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#e2e2e8;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:40px 20px}.container{width:100%;max-width:900px}.header{text-align:center;margin-bottom:32px}.header h1{font-size:18px;color:#6b7280;font-weight:500;margin-bottom:8px}.header a{color:#22c55e;text-decoration:none;font-weight:600}.video-wrap{background:linear-gradient(145deg,#13131a 0%,#1a1a24 100%);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:24px;box-shadow:0 24px 48px -12px rgba(0,0,0,0.5)}video{width:100%;border-radius:12px;display:block;background:#000}.meta{margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}.meta-left{color:#6b7280;font-size:14px}.meta-right{display:flex;gap:10px}.btn{padding:10px 20px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}.btn-primary{background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:white}.btn-primary:hover{transform:translateY(-1px);box-shadow:0 4px 16px rgba(34,197,94,0.3)}.btn-secondary{background:rgba(255,255,255,0.06);color:#e2e2e8;border:1px solid rgba(255,255,255,0.08)}.btn-secondary:hover{background:rgba(255,255,255,0.1)}.btn-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:white}.share-box{margin-top:16px;padding:16px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;display:none}.share-box h4{color:#fff;font-size:14px;margin-bottom:12px}.share-input{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px 14px;color:#fff;font-family:inherit;margin-bottom:10px;outline:none}.share-input:focus{border-color:rgba(34,197,94,0.4)}.share-row{display:flex;gap:8px}.payment-box{margin-top:16px;padding:16px;background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.15);border-radius:12px;display:none;text-align:center}.payment-box h4{color:#22c55e;font-size:14px;margin-bottom:10px}.qr-row{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}.qr-row img{width:160px;height:160px;border-radius:10px;background:#fff;padding:4px}.footer{margin-top:40px;text-align:center;color:#4b5563;font-size:13px}.footer a{color:#6b7280;text-decoration:none}@media(max-width:640px){.video-wrap{padding:16px}}</style></head><body><div class="container"><div class="header"><h1>Recorded with <a href="/">RecordDrop</a></h1><p style="color:#4b5563;font-size:13px;">Screen recording that never loses your video</p></div><div class="video-wrap"><video src="/uploads/${req.params.id}.webm" controls autoplay playsinline></video><div class="meta"><div class="meta-left"><span id="viewCount">Loading views...</span> · No login required</div><div class="meta-right"><button class="btn btn-secondary" onclick="copyLink()">Copy Link</button><button class="btn btn-secondary" onclick="toggleShare()">Send to...</button><a href="/uploads/${req.params.id}.webm" class="btn btn-primary" download>Download</a></div></div><div class="share-box" id="shareBox"><h4>📧 Send this video via email</h4><input type="email" class="share-input" id="emailTo" placeholder="recipient@example.com"><input type="text" class="share-input" id="emailMsg" placeholder="Optional message..."><div class="share-row"><button class="btn btn-primary" onclick="sendEmail()">Send Email</button><button class="btn btn-secondary" onclick="toggleShare()">Cancel</button></div><p id="emailStatus" style="margin-top:10px;font-size:13px;color:#6b7280;"></p></div><div class="payment-box" id="paymentBox"><h4>☕ Support the creator</h4><div class="qr-row" id="qrRow"></div></div></div><div class="footer"><p>Want your own videos saved safely? <a href="/">Try RecordDrop free</a></p></div></div><script>fetch('/api/views/${req.params.id}').then(r=>r.json()).then(data=>{document.getElementById('viewCount').textContent=data.views+' view'+(data.views!==1?'s':'')}).catch(()=>{document.getElementById('viewCount').textContent='0 views'});function copyLink(){navigator.clipboard.writeText(window.location.href).then(()=>{const btn=document.querySelector('.btn-secondary');btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy Link',2000)})}function toggleShare(){const box=document.getElementById('shareBox');box.style.display=box.style.display==='block'?'none':'block';}async function sendEmail(){const to=document.getElementById('emailTo').value.trim();const msg=document.getElementById('emailMsg').value.trim();const status=document.getElementById('emailStatus');if(!to){status.textContent='Please enter an email address';status.style.color='#ef4444';return;}status.textContent='Sending...';status.style.color='#6b7280';try{const res=await fetch('/api/share/email',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({to,videoUrl:window.location.href,message:msg})});if(res.ok){status.textContent='✅ Email sent!';status.style.color='#22c55e';document.getElementById('emailTo').value='';document.getElementById('emailMsg').value='';}else{const err=await res.json();status.textContent='❌ '+(err.error||'Failed');status.style.color='#ef4444';}}catch(e){status.textContent='❌ Network error';status.style.color='#ef4444';}}fetch('/api/payment/config').then(r=>r.json()).then(cfg=>{if(cfg.enabled){const box=document.getElementById('paymentBox');const row=document.getElementById('qrRow');let html='';if(cfg.wechatQr)html+='<div><img src="'+cfg.wechatQr+'" alt="WeChat Pay"></div>';if(cfg.alipayQr)html+='<div><img src="'+cfg.alipayQr+'" alt="Alipay"></div>';if(cfg.paypalLink)html+='<a href="'+cfg.paypalLink+'" target="_blank" class="btn btn-primary" style="text-decoration:none;">PayPal</a>';if(html){row.innerHTML=html;box.style.display='block';}}});</script></body></html>`);
 });
 
-app.get('/api/views/:id', (req, res) => {
-  const metaFile = path.join(metaDir, `${req.params.id}.json`);
-  if (!fs.existsSync(metaFile)) return res.json({ views: 0 });
-  try { const meta = JSON.parse(fs.readFileSync(metaFile, 'utf8')); res.json({ views: meta.views || 0 }); } catch(e) { res.json({ views: 0 }); }
-});
-
+// ===== Static Pages =====
 app.get('/about', (req, res) => {
-  res.send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>About - RecordDrop</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#e2e2e8;min-height:100vh;padding:60px 24px;line-height:1.6}.container{max-width:720px;margin:0 auto}.nav{display:flex;gap:24px;margin-bottom:48px;font-size:14px}.nav a{color:#6b7280;text-decoration:none;transition:color 0.2s}.nav a:hover{color:#22c55e}h1{font-size:36px;color:#fff;margin-bottom:16px}h2{font-size:20px;color:#fff;margin:40px 0 16px}p{color:#9ca3af;margin-bottom:16px;font-size:16px}.highlight{color:#22c55e;font-weight:600}.story{background:linear-gradient(145deg,#13131a 0%,#1a1a24 100%);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:32px;margin:32px 0}.story p:last-child{margin-bottom:0}.footer{margin-top:64px;text-align:center;color:#4b5563;font-size:14px}.footer a{color:#6b7280;text-decoration:none}</style></head><body><div class="container"><div class="nav"><a href="/">← Home</a><a href="/terms">Terms</a><a href="/feedback">Feedback</a></div><h1>About RecordDrop</h1><p>RecordDrop is an <span class="highlight">open-source, local-first screen recorder</span> built for people who are tired of losing videos to failed uploads, subscription traps, and vendor lock-in.</p><div class="story"><h2>Why we built this</h2><p>It started with a 30-minute bug reproduction. Recorded. Stopped. Upload stuck at 0%. Video gone forever.</p><p>That was the moment we realized: cloud-first recording is backwards. The most important thing isn't the share link — it's the <span class="highlight">file itself</span>. If the file isn't safe on your machine first, nothing else matters.</p></div><h2>Our philosophy</h2><p><strong>Local-first:</strong> Every recording hits your hard drive instantly. Uploads are optional, not mandatory.</p><p><strong>No limits:</strong> Record for 5 seconds or 5 hours. Your only limit is disk space.</p><p><strong>Own your data:</strong> Self-host with Docker. Your videos never leave your infrastructure unless you choose to share them.</p><p><strong>Flat pricing:</strong> $39 one-time for the desktop app, or free forever if you self-host. No per-seat tax.</p><h2>Open source</h2><p>RecordDrop is open source because we believe tools that handle your data should be transparent. The full source code is available on GitHub.</p><div class="footer"><p>© 2026 RecordDrop · <a href="/">Home</a> · <a href="/terms">Terms</a> · <a href="/feedback">Feedback</a></p></div></div></body></html>`);
+  res.send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>About - RecordDrop</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#e2e2e8;min-height:100vh;padding:60px 24px;line-height:1.6}.container{max-width:720px;margin:0 auto}.nav{display:flex;gap:24px;margin-bottom:48px;font-size:14px}.nav a{color:#6b7280;text-decoration:none;transition:color 0.2s}.nav a:hover{color:#22c55e}h1{font-size:36px;color:#fff;margin-bottom:16px}h2{font-size:20px;color:#fff;margin:40px 0 16px}p{color:#9ca3af;margin-bottom:16px;font-size:16px}.highlight{color:#22c55e;font-weight:600}.story{background:linear-gradient(145deg,#13131a 0%,#1a1a24 100%);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:32px;margin:32px 0}.story p:last-child{margin-bottom:0}.footer{margin-top:64px;text-align:center;color:#4b5563;font-size:14px}.footer a{color:#6b7280;text-decoration:none}</style></head><body><div class="container"><div class="nav"><a href="/">← Home</a><a href="/terms">Terms</a><a href="/feedback">Feedback</a></div><h1>About RecordDrop</h1><p>RecordDrop is an <span class="highlight">open-source, local-first screen recorder</span> built for people who are tired of losing videos to failed uploads, subscription traps, and vendor lock-in.</p><div class="story"><h2>Why we built this</h2><p>It started with a 30-minute bug reproduction. Recorded. Stopped. Upload stuck at 0%. Video gone forever.</p><p>That was the moment we realized: cloud-first recording is backwards. The most important thing isn't the share link — it's the <span class="highlight">file itself</span>. If the file isn't safe on your machine first, nothing else matters.</p></div><h2>Our philosophy</h2><p><strong>Local-first:</strong> Every recording hits your hard drive instantly. Uploads are optional, not mandatory.</p><p><strong>No limits:</strong> Record for 5 seconds or 5 hours. Your only limit is disk space.</p><p><strong>Own your data:</strong> Self-host with Docker. Your videos never leave your infrastructure unless you choose to share them.</p><p><strong>Flat pricing:</strong> Core features free forever. Pro features (AI, team) start at $8/month. No per-seat tax.</p><h2>Open source</h2><p>RecordDrop is open source because we believe tools that handle your data should be transparent. The full source code is available on GitHub.</p><div class="footer"><p>© 2026 RecordDrop · <a href="/">Home</a> · <a href="/terms">Terms</a> · <a href="/feedback">Feedback</a></p></div></div></body></html>`);
 });
 
 app.get('/terms', (req, res) => {
@@ -153,6 +181,72 @@ app.get('/feedback', (req, res) => {
   res.send(`<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Feedback - RecordDrop</title><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Inter',sans-serif;background:#0a0a0f;color:#e2e2e8;min-height:100vh;padding:60px 24px;line-height:1.6}.container{max-width:720px;margin:0 auto}.nav{display:flex;gap:24px;margin-bottom:48px;font-size:14px}.nav a{color:#6b7280;text-decoration:none;transition:color 0.2s}.nav a:hover{color:#22c55e}h1{font-size:36px;color:#fff;margin-bottom:8px}.subtitle{color:#6b7280;margin-bottom:32px}.form{background:linear-gradient(145deg,#13131a 0%,#1a1a24 100%);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:32px;margin-bottom:40px}.form-group{margin-bottom:20px}label{display:block;color:#9ca3af;font-size:14px;margin-bottom:8px;font-weight:500}input,textarea{width:100%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 16px;color:#fff;font-family:inherit;font-size:15px;outline:none;transition:all 0.2s}input:focus,textarea:focus{border-color:rgba(34,197,94,0.4);background:rgba(255,255,255,0.06)}textarea{min-height:120px;resize:vertical}.btn-submit{background:linear-gradient(135deg,#22c55e 0%,#16a34a 100%);color:white;border:none;padding:14px 28px;border-radius:12px;font-size:16px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s}.btn-submit:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(34,197,94,0.3)}.messages{margin-top:32px}.msg-item{background:linear-gradient(145deg,#13131a 0%,#1a1a24 100%);border:1px solid rgba(255,255,255,0.06);border-radius:16px;padding:24px;margin-bottom:16px}.msg-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}.msg-name{color:#fff;font-weight:600;font-size:15px}.msg-time{color:#4b5563;font-size:13px}.msg-body{color:#9ca3af;font-size:15px;line-height:1.6;white-space:pre-wrap}.msg-reply{margin-top:12px;padding-left:16px;border-left:2px solid rgba(34,197,94,0.3);color:#6b7280;font-size:14px}.empty{text-align:center;color:#4b5563;padding:40px 0}.footer{margin-top:64px;text-align:center;color:#4b5563;font-size:14px}.footer a{color:#6b7280;text-decoration:none}</style></head><body><div class="container"><div class="nav"><a href="/">← Home</a><a href="/about">About</a><a href="/terms">Terms</a></div><h1>Feedback</h1><p class="subtitle">Leave a public message. We read every single one.</p><div class="form"><div class="form-group"><label>Name</label><input type="text" id="msgName" placeholder="Your name" maxlength="50"></div><div class="form-group"><label>Email (optional)</label><input type="email" id="msgEmail" placeholder="you@example.com" maxlength="100"></div><div class="form-group"><label>Message</label><textarea id="msgBody" placeholder="What's on your mind? Feature requests, bug reports, or just saying hi..." maxlength="2000"></textarea></div><button class="btn-submit" onclick="submitMsg()">Post Message</button></div><div class="messages" id="msgList"><div class="empty">Loading messages...</div></div><div class="footer"><p>© 2026 RecordDrop · <a href="/">Home</a> · <a href="/about">About</a> · <a href="/terms">Terms</a></p></div></div><script>async function loadMsgs(){try{const res=await fetch('/api/messages');const msgs=await res.json();const box=document.getElementById('msgList');if(!msgs.length){box.innerHTML='<div class="empty">No messages yet. Be the first!</div>';return}box.innerHTML=msgs.map(m=>{const date=new Date(m.createdAt).toLocaleString();let html='<div class="msg-item"><div class="msg-header"><span class="msg-name">'+(m.name||'Anonymous')+'</span><span class="msg-time">'+date+'</span></div><div class="msg-body">'+escapeHtml(m.message)+'</div>';if(m.replyTo){html+='<div class="msg-reply">↳ Reply to #'+m.replyTo+'</div>'}html+='</div>';return html}).join('')}catch(e){document.getElementById('msgList').innerHTML='<div class="empty">Failed to load messages.</div>'}}function escapeHtml(t){const d=document.createElement('div');d.textContent=t;return d.innerHTML}async function submitMsg(){const name=document.getElementById('msgName').value.trim();const email=document.getElementById('msgEmail').value.trim();const message=document.getElementById('msgBody').value.trim();if(!name||!message){alert('Please enter your name and message.');return}try{const res=await fetch('/api/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,message})});if(res.ok){document.getElementById('msgName').value='';document.getElementById('msgEmail').value='';document.getElementById('msgBody').value='';loadMsgs()}else{alert('Failed to post. Please try again.')}}catch(e){alert('Network error. Please try again.')}}loadMsgs()</script></body></html>`);
 });
 
+// ===== Automation APIs (Reserved for Pro tier) =====
+
+// Webhook: notify external services when recording is uploaded
+app.post('/api/webhook/register', (req, res) => {
+  res.status(501).json({
+    error: 'Webhooks are a Pro feature.',
+    plan: 'https://github.com/dj1988022/RecordDrop#pro',
+    docs: 'Coming in v0.3.0'
+  });
+});
+
+// AI: auto title generation
+app.post('/api/ai/title', (req, res) => {
+  res.status(501).json({
+    error: 'AI features are a Pro feature.',
+    plan: 'https://github.com/dj1988022/RecordDrop#pro',
+    docs: 'Requires OpenAI API key. Coming in v0.4.0'
+  });
+});
+
+// AI: transcription
+app.post('/api/ai/transcribe', (req, res) => {
+  res.status(501).json({
+    error: 'AI transcription is a Pro feature.',
+    plan: 'https://github.com/dj1988022/RecordDrop#pro',
+    docs: 'Requires Whisper. Coming in v0.4.0'
+  });
+});
+
+// Team: workspace creation
+app.post('/api/team/workspace', (req, res) => {
+  res.status(501).json({
+    error: 'Team workspaces are a Pro feature.',
+    plan: 'https://github.com/dj1988022/RecordDrop#pro',
+    docs: 'Coming in v0.5.0'
+  });
+});
+
+// Team: comments on videos
+app.post('/api/team/comment', (req, res) => {
+  res.status(501).json({
+    error: 'Team comments are a Pro feature.',
+    plan: 'https://github.com/dj1988022/RecordDrop#pro',
+    docs: 'Coming in v0.5.0'
+  });
+});
+
+// Trim: requires FFmpeg
+app.post('/api/trim', (req, res) => {
+  res.status(501).json({
+    error: 'Trim requires FFmpeg to be installed on the server.',
+    hint: 'apt install ffmpeg',
+    docs: 'https://github.com/dj1988022/RecordDrop#trim'
+  });
+});
+
+// MP4 conversion: requires FFmpeg
+app.post('/api/convert/mp4', (req, res) => {
+  res.status(501).json({
+    error: 'MP4 conversion requires FFmpeg.',
+    hint: 'apt install ffmpeg',
+    docs: 'Coming in v0.3.0'
+  });
+});
+
+// ===== Static Files =====
 app.use('/uploads', express.static(uploadDir));
 
-app.listen(PORT, '0.0.0.0', () => console.log(`RecordDrop running on port ${PORT}`));
+app.listen(PORT, '0.0.0.0', () => console.log(`RecordDrop v0.2.0 running on port ${PORT}`));
