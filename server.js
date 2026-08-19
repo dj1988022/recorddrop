@@ -40,8 +40,8 @@ app.use((req, res, next) => {
   next();
 });
 
-// 静态文件（public 目录放你的 index.html）
-app.use(express.static(CONFIG.publicDir));
+// 静态文件（从根目录提供，index.html 放根目录即可）
+app.use(express.static(__dirname));
 
 /* ================= 邮件 / 支付配置 ================= */
 let mailTransporter = null;
