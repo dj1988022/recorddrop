@@ -23,9 +23,9 @@
     .btn-record{background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;box-shadow:0 4px 20px rgba(239,68,68,0.3)}
     .btn-record:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(239,68,68,0.4)}
     .btn-stop{background:linear-gradient(135deg,#374151,#1f2937);color:#fff;display:none}
-    .btn-download{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;text-decoration:none}
+    .btn-download{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;;text-decoration:none}
     .btn-download:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(34,197,94,0.3)}
-    .btn-share{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;text-decoration:none}
+    .btn-share{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;;text-decoration:none}
     .btn-share:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(59,130,246,0.3)}
     .btn-retake{background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;}
     .btn-retake:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(245,158,11,0.3)}
@@ -90,7 +90,6 @@
     .footer a:hover{color:#22c55e}
     @media(max-width:640px){h1{font-size:32px}.subtitle{font-size:17px}.recorder-card{padding:32px 24px}.features{grid-template-columns:1fr}.lang-switcher{top:12px;right:12px}.qr-grid img{width:120px;height:120px}.camera-preview{width:120px;height:90px;bottom:16px;right:16px}}
   </style>
-<base target="_blank">
 </head>
 <body>
   <div class="lang-switcher">
@@ -326,11 +325,7 @@ startBtn.onclick=async()=>{
   }
 };
 
-stopBtn.onclick=()=>{
-  recorder.stop();
-  stopBtn.style.display='none';
-  progressBar.style.display='block';
-};
+stopBtn.onclick=()=>{recorder.stop();stream.getTracks().forEach(t=>t.stop());stopBtn.style.display='none';progressBar.style.display='block'};
 
 async function uploadVideo(blob){const formData=new FormData();formData.append('video',blob,'recording.webm');try{progressFill.style.width='30%';const res=await fetch('/upload',{method:'POST',body:formData});progressFill.style.width='70%';if(!res.ok)throw new Error('Upload failed');const data=await res.json();progressFill.style.width='100%';currentVideoId=data.id;shareBtn.href=data.url;actionRow.style.display='flex';linkBox.textContent=data.url;linkBox.style.display='block';saveDot.className='save-dot server';saveText.textContent=(currentLang==='zh'?'✅ 已保存到本地 + 服务器：':'✅ Saved locally + server: ')+data.serverPath;navigator.clipboard.writeText(data.url).then(()=>{status.textContent=t().statusLink}).catch(()=>{status.textContent='✅ Upload complete! Link: '+data.url});setTimeout(()=>progressBar.style.display='none',1000)}catch(err){progressBar.style.display='none';status.textContent=t().statusFail;status.className='status error';console.error(err)}}
 
@@ -342,5 +337,4 @@ function closePayment(){document.getElementById('paymentModal').style.display='n
 loadPaymentConfig();
 </script>
 </body>
-</html>
 </html>
