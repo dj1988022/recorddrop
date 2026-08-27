@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RecordDrop — Screen recording for developers</title>
+  <meta name="description" content="Record your screen and drop the link into GitHub in one click. Alt+R to start. Built for bug reports.">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;line-height:1.6;color:#1a1a1a;background:#fafafa}
+    .container{max-width:960px;margin:0 auto;padding:0 24px}
+    header{padding:24px 0;border-bottom:1px solid #eaeaea;background:#fff}
+    header .container{display:flex;justify-content:space-between;align-items:center}
+    .logo{font-size:20px;font-weight:700;color:#111;text-decoration:none;display:flex;align-items:center;gap:8px}
+    .logo span{width:28px;height:28px;background:#e11d48;border-radius:6px;display:inline-block}
+    nav a{color:#555;text-decoration:none;margin-left:24px;font-size:14px}
+    nav a:hover{color:#111}
+    .hero{padding:80px 0 60px;text-align:center;background:#fff}
+    .hero h1{font-size:48px;font-weight:800;letter-spacing:-1px;margin-bottom:16px}
+    .hero p{font-size:20px;color:#555;max-width:600px;margin:0 auto 32px}
+    .cta-group{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .btn{display:inline-block;padding:12px 28px;border-radius:8px;font-size:15px;font-weight:600;text-decoration:none;transition:.2s}
+    .btn-primary{background:#111;color:#fff}
+    .btn-primary:hover{background:#333}
+    .btn-secondary{background:#fff;color:#111;border:1px solid #ddd}
+    .btn-secondary:hover{border-color:#111}
+    .meta{margin-top:16px;font-size:13px;color:#888}
+    kbd{background:#f4f4f5;padding:2px 6px;border-radius:4px;border:1px solid #e4e4e7;font-family:monospace;font-size:13px}
+    .features{padding:60px 0;background:#fafafa}
+    .features h2{text-align:center;font-size:32px;margin-bottom:48px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:32px}
+    .card{background:#fff;padding:32px;border-radius:12px;border:1px solid #eaeaea}
+    .card h3{font-size:20px;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+    .card p{color:#555;font-size:15px}
+    .workflow{padding:60px 0;background:#fff;text-align:center}
+    .workflow h2{font-size:32px;margin-bottom:40px}
+    .steps{display:flex;justify-content:center;gap:40px;flex-wrap:wrap;margin-bottom:24px}
+    .step{background:#fafafa;padding:24px 32px;border-radius:12px;border:1px solid #eaeaea;min-width:200px}
+    .step strong{display:block;font-size:24px;margin-bottom:8px;color:#e11d48}
+    .usecases{padding:60px 0;background:#fafafa}
+    .usecases h2{text-align:center;font-size:32px;margin-bottom:40px}
+    .usecases ul{max-width:600px;margin:0 auto;list-style:none}
+    .usecases li{padding:16px 0;border-bottom:1px solid #eaeaea;font-size:17px}
+    .usecases li strong{display:block;margin-bottom:4px}
+    footer{padding:40px 0;text-align:center;border-top:1px solid #eaeaea;background:#fff;font-size:14px;color:#888}
+    footer a{color:#555;text-decoration:none;margin:0 12px}
+    footer a:hover{color:#111}
+    @media(max-width:640px){.hero h1{font-size:36px}.steps{flex-direction:column;align-items:center}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <a href="/" class="logo"><span></span>RecordDrop</a>
+      <nav>
+        <a href="/install">Install</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/feedback">Feedback</a>
+        <a href="https://github.com/dj1988022/RecordDrop">GitHub</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="container">
+      <h1>Record bugs. Share context.<br>Zero friction.</h1>
+      <p>RecordDrop is a screen recorder built for developers. Press <kbd>Alt</kbd>+<kbd>R</kbd>, record your screen, and drop the video link straight into GitHub — with URL, viewport, and console logs attached automatically.</p>
+      <div class="cta-group">
+        <a href="https://chrome.google.com/webstore/detail/recorddrop/[YOUR_ID]" class="btn btn-primary">Add to Chrome — Free</a>
+        <a href="https://github.com/dj1988022/RecordDrop" class="btn btn-secondary">View on GitHub</a>
+      </div>
+      <p class="meta">No account required. No upload limits. Open source.</p>
+    </div>
+  </section>
+
+  <section class="features">
+    <div class="container">
+      <h2>Built different</h2>
+      <div class="grid">
+        <div class="card">
+          <h3>💾 Local-First</h3>
+          <p>Your recording hits your hard drive instantly. Even if the upload fails, your file is safe.</p>
+        </div>
+        <div class="card">
+          <h3>⏱️ No Time Limits</h3>
+          <p>Record as long as you need. No 5-minute caps. No lifetime quotas.</p>
+        </div>
+        <div class="card">
+          <h3>🐳 Self-Host in 30s</h3>
+          <p>Deploy with Docker. Your videos stay on your infrastructure. Full source code available.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="workflow">
+    <div class="container">
+      <h2>One workflow. Three seconds.</h2>
+      <div class="steps">
+        <div class="step"><strong>1</strong>Press Alt+R on any page</div>
+        <div class="step"><strong>2</strong>Record your screen</div>
+        <div class="step"><strong>3</strong>Paste into GitHub instantly</div>
+      </div>
+      <p class="meta">Auto-captured: URL, viewport size, user agent, timestamp, console errors.</p>
+    </div>
+  </section>
+
+  <section class="usecases">
+    <div class="container">
+      <h2>Built for developer workflows</h2>
+      <ul>
+        <li><strong>Bug reports</strong> Reproduce issues with full context attached. No more "works on my machine".</li>
+        <li><strong>Code reviews</strong> Walk through changes without scheduling a call.</li>
+        <li><strong>Async standups</strong> Show progress, not just tell.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <a href="/privacy">Privacy Policy</a>
+      <a href="/feedback">Feedback</a>
+      <a href="https://github.com/dj1988022/RecordDrop">GitHub</a>
+      <a href="https://github.com/dj1988022/RecordDrop/issues">Support</a>
+      <p style="margin-top:16px">© 2026 RecordDrop. Open source under MIT License.</p>
+    </div>
+  </footer>
+</body>
+</html>
