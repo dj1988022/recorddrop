@@ -3,113 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RecordDrop AI - Smart SOP Laboratory</title>
+    
+    <!-- 1. 谷歌 SEO 收录文案 (Google Indexing Meta Tags) -->
+    <title>RecordDrop AI — Record Screen & Generate SOP Documents Automatically</title>
+    <meta name="description" content="The best Loom alternative for documentation. Capture your screen locally and let AI write professional step-by-step SOPs and manuals. No cloud required.">
+    <meta name="keywords" content="AI SOP Generator, Screen Recorder, Process Documentation, Automated Manuals, Loom Alternative">
+    <meta name="author" content="RecordDrop Team">
+    
+    <!-- Open Graph (社交媒体预览) -->
+    <meta property="og:title" content="RecordDrop AI - From Video to SOP in Seconds">
+    <meta property="og:description" content="Stop wasting hours writing manuals. Capture your workflow and get AI-written steps instantly.">
+    <meta property="og:url" content="https://recorddrop.site">
+    <meta property="og:type" content="website">
+
     <style>
         :root { --primary: #007aff; --bg: #0a0a0a; --card: #161616; --text: #e5e5e5; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
 
-        /* 顶部：社区公告与登录 */
-        .top-bar { background: #111; border-bottom: 1px solid #222; padding: 8px 20px; font-size: 12px; position: sticky; top: 0; z-index: 100; }
+        /* 顶部栏 */
+        .top-bar { background: #111; border-bottom: 1px solid #222; padding: 10px 20px; font-size: 12px; position: sticky; top: 0; z-index: 1000; }
         .top-content { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
-        .ticker { color: #888; }
-        .ticker b { color: var(--primary); }
         .auth-btns a { color: #888; text-decoration: none; margin-left: 15px; }
-        .btn-login { border: 1px solid #444; padding: 4px 12px; border-radius: 6px; }
+        .btn-login { border: 1px solid #444; padding: 4px 12px; border-radius: 6px; color: #fff !important; }
 
         /* 导航 */
-        nav { max-width: 1100px; margin: 0 auto; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-weight: 800; font-size: 22px; cursor: pointer; }
-        .nav-links a { color: #aaa; text-decoration: none; margin-left: 20px; font-size: 14px; }
+        nav { max-width: 1100px; margin: 0 auto; padding: 25px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 800; font-size: 24px; letter-spacing: -1px; }
+        .nav-links a { color: #aaa; text-decoration: none; margin-left: 20px; font-size: 14px; transition: 0.3s; }
+        .nav-links a:hover { color: var(--primary); }
 
-        .container { max-width: 1100px; margin: 0 auto; padding: 40px 20px; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
 
-        /* 留言板 */
-        .community-board { background: var(--card); border: 1px solid #222; border-radius: 12px; padding: 20px; margin-bottom: 30px; }
-        .msg-list { max-height: 200px; overflow-y: auto; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px; }
-        .msg-item { margin-bottom: 10px; font-size: 13px; }
-        .user-name { color: var(--primary); font-weight: bold; }
-        .dev-reply { background: #000; padding: 8px; border-radius: 6px; margin-top: 5px; color: #888; border-left: 2px solid var(--primary); }
+        /* 社区留言板 */
+        .community-section { background: var(--card); border: 1px solid #222; border-radius: 16px; padding: 25px; margin-bottom: 30px; }
+        .msg-list { max-height: 150px; overflow-y: auto; margin-bottom: 15px; border-bottom: 1px solid #222; padding-bottom: 10px; }
+        .msg-item { font-size: 13px; margin-bottom: 10px; }
+        .user-tag { color: var(--primary); font-weight: bold; margin-right: 5px; }
+        .reply-tag { background: #000; color: #888; padding: 5px 10px; border-radius: 6px; margin-top: 5px; display: block; border-left: 2px solid var(--primary); }
 
-        /* 录制区 */
-        .work-area { background: var(--card); border: 1px solid #222; border-radius: 20px; padding: 60px 20px; text-align: center; margin-bottom: 30px; }
-        .btn-main { background: #ff3b30; color: white; border: none; padding: 16px 40px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 0 20px rgba(255,59,48,0.2); }
-        .btn-stop { background: #fff; color: #000; display: none; }
+        /* 核心工作区 */
+        .hero-section { text-align: center; padding: 40px 0; }
+        h1 { font-size: 3rem; margin-bottom: 15px; background: linear-gradient(135deg, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .work-card { background: var(--card); border: 1px solid #222; border-radius: 24px; padding: 60px 40px; text-align: center; margin-bottom: 40px; }
+        .btn-main { background: #ff3b30; color: white; border: none; padding: 18px 50px; border-radius: 14px; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 30px rgba(255,59,48,0.3); }
+        .btn-main:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(255,59,48,0.5); }
+        .btn-stop { background: #fff !important; color: #000 !important; display: none; }
 
         /* 结果展示布局 */
-        .result-layout { display: none; grid-template-columns: 1.2fr 1fr; gap: 30px; margin-top: 20px; }
+        .result-layout { display: none; grid-template-columns: 1.2fr 1fr; gap: 40px; margin-top: 20px; }
         .result-layout.active { display: grid; }
-        video { width: 100%; border-radius: 12px; background: #000; border: 1px solid #333; }
-        .sop-paper { background: #fff; color: #1a1a1a; border-radius: 12px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        .sop-step { margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        video { width: 100%; border-radius: 16px; border: 1px solid #333; background: #000; }
 
-        /* 页脚 */
+        .sop-paper { background: #fff; color: #1a1a1a; border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .sop-step { border-left: 3px solid var(--primary); padding-left: 15px; margin-bottom: 25px; }
+        .step-label { font-weight: 800; font-size: 12px; color: var(--primary); text-transform: uppercase; }
+        .step-text { font-weight: 700; font-size: 16px; margin-top: 5px; }
+        .step-desc { font-size: 14px; color: #666; outline: none; margin-top: 5px; }
+
+        /* 页脚法律说明 */
         footer { border-top: 1px solid #222; padding: 60px 20px; margin-top: 80px; }
         .footer-grid { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
-        .footer-col h4 { color: #fff; margin-bottom: 20px; font-size: 14px; }
-        .footer-col a { display: block; color: #666; text-decoration: none; font-size: 13px; margin-bottom: 10px; }
+        .footer-col h4 { font-size: 14px; color: #fff; margin-bottom: 20px; }
+        .footer-col a { display: block; color: #666; text-decoration: none; font-size: 13px; margin-bottom: 12px; transition: 0.3s; }
         .footer-col a:hover { color: var(--primary); }
+
+        /* 自动化测试雏形 */
+        .automation-test { margin-top: 40px; padding: 20px; border: 1px dashed #333; border-radius: 12px; text-align: left; }
+        
+        @media (max-width: 768px) { .result-layout { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
 <div class="top-bar">
     <div class="top-content">
-        <div class="ticker"><b>Latest Feed:</b> <span id="tickerMsg">"How do I edit steps?" — Dev: Just click the text and type!</span></div>
+        <div style="color:#888;"><b>New:</b> AI SOP Export now supports Markdown!</div>
         <div class="auth-btns">
-            <a href="#" onclick="alert('Join our Beta! Email collection coming soon.')">Register</a>
-            <a href="#" class="btn-login">Login</a>
+            <a href="#" class="btn-login" onclick="alert('Join Beta: Email list opens next week!')">Sign Up Free</a>
         </div>
     </div>
 </div>
 
 <nav>
-    <div class="logo" onclick="location.href='/'">RecordDrop<span style="color:var(--primary)">.AI</span></div>
+    <div class="logo">RecordDrop<span style="color:var(--primary)">.AI</span></div>
     <div class="nav-links">
-        <a href="#board">Community</a>
-        <a href="#how">How it works</a>
+        <a href="#board">Feedback</a>
+        <a href="#how">How it Works</a>
         <a href="#legal">Legal</a>
         <a href="#" style="color:#f59e0b; font-weight:bold;">PRO $29</a>
     </div>
 </nav>
 
 <div class="container">
-    <!-- 留言板 -->
-    <div class="community-board" id="board">
-        <h4 style="margin-bottom:15px;">Live Community Q&A</h4>
+    <!-- 社区留言板 -->
+    <div class="community-section" id="board">
+        <h3 style="margin-bottom:15px; font-size:16px;">💬 Live Community Q&A</h3>
         <div class="msg-list" id="msgList">
             <div class="msg-item">
-                <span class="user-name">Beta_User:</span> Can I export to PDF?
-                <div class="dev-reply"><b>Dev:</b> Yes! Use the "Export PDF" button after recording.</div>
+                <span class="user-tag">User_402:</span> "Can I use this for training new employees?" 
+                <span class="reply-tag"><b>Dev:</b> Absolutely! That's our core mission. Record the process once, share the SOP forever.</span>
             </div>
         </div>
         <div style="display:flex; gap:10px;">
-            <input type="text" id="userIn" placeholder="Ask dev a question..." style="flex:1; background:#000; border:1px solid #333; color:#fff; padding:10px; border-radius:8px; outline:none;">
-            <button onclick="postMsg()" style="background:var(--primary); color:white; border:none; padding:0 20px; border-radius:8px; cursor:pointer;">Send</button>
+            <input type="text" id="userIn" placeholder="Ask a question..." style="flex:1; background:#000; border:1px solid #333; color:#fff; padding:12px; border-radius:10px; outline:none;">
+            <button onclick="postMsg()" style="background:var(--primary); color:white; border:none; padding:0 20px; border-radius:10px; cursor:pointer; font-weight:bold;">Send</button>
         </div>
     </div>
 
-    <!-- 录制区 -->
-    <div class="work-area">
-        <h2 style="margin-bottom:20px;">AI SOP Generator Lab</h2>
-        <button class="btn-main" id="startBtn" onclick="startLab()">🔴 Start Recording</button>
-        <button class="btn-main btn-stop" id="stopBtn" onclick="stopLab()">⏹ Stop & Draft SOP</button>
-        <p style="margin-top:20px; color:#555; font-size:13px;">Your privacy matters: Video is saved to your Downloads folder, not our servers.</p>
+    <!-- 录制卡片 -->
+    <div class="hero-section">
+        <h1>Your Expertise, Automated.</h1>
+        <p style="color:#666; font-size:1.2rem; max-width:700px; margin: 0 auto 30px;">Record any software workflow. Our AI drafts the Step-by-Step manual for you instantly. Save hours of manual documentation.</p>
+        
+        <div class="work-card">
+            <div id="recStatus" style="display:none; color:#ff3b30; font-weight:bold; margin-bottom:15px;">● Recording & Tracking...</div>
+            <button class="btn-main" id="startBtn" onclick="startLab()">Start Capture SOP</button>
+            <button class="btn-main btn-stop" id="stopBtn" onclick="stopLab()">Finish & Get SOP</button>
+            <p style="margin-top:20px; font-size:12px; color:#444;">Works locally. No video is uploaded without your action.</p>
+        </div>
     </div>
 
     <!-- 结果展示 -->
     <div class="result-layout" id="resLayout">
         <div>
-            <h3 style="margin-bottom:15px;">1. Video Review</h3>
+            <h3 style="margin-bottom:15px;">1. Workflow Video</h3>
             <video id="preview" controls></video>
+            <!-- 自动化尝试按钮 -->
+            <div class="automation-test">
+                <p style="font-size:12px; color:#888; margin-bottom:10px;"><b>Experimental:</b> Half-auto Tool</p>
+                <button onclick="alert('This will trigger AI to generate a script based on your clicks!')" style="font-size:12px; cursor:pointer;">Generate Execution Script</button>
+            </div>
         </div>
+        
         <div class="sop-paper">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 style="color:#000;">2. AI Drafted SOP</h3>
-                <button onclick="window.print()" style="cursor:pointer; font-size:12px;">Export PDF</button>
+                <h3 style="color:#000;">2. AI Generated SOP</h3>
+                <button onclick="window.print()" style="cursor:pointer; font-size:12px; padding:5px 10px;">Export PDF</button>
             </div>
-            <div id="sopSteps" style="color:#444;">
-                <p>Analyzing actions...</p>
+            <div id="sopSteps" style="color:#1a1a1a;">
+                <p style="color:#999; font-style:italic;">AI is analyzing your clicks...</p>
             </div>
         </div>
     </div>
@@ -118,58 +152,69 @@
 <footer id="legal">
     <div class="footer-grid">
         <div class="footer-col">
-            <h4>About RecordDrop</h4>
-            <a href="#">Mission: Save 1h/day</a>
-            <a href="#">Open Source</a>
-            <a href="#">GitHub Repository</a>
+            <h4>About Product</h4>
+            <a href="#">Our Vision</a>
+            <a href="#">Roadmap 2026</a>
+            <a href="#">Open Source License</a>
         </div>
         <div class="footer-col">
-            <h4>Legal & Trust</h4>
-            <a href="#" onclick="alert('Privacy Policy: We do not store your videos.')">Privacy Policy</a>
+            <h4>Security & Privacy</h4>
+            <a href="#" onclick="alert('Privacy: We use Local-First architecture. Data stays on your machine.')">Privacy Policy</a>
             <a href="#" onclick="alert('Refunds: 14-day money back guarantee.')">Refund Policy</a>
-            <a href="#">Terms of Service</a>
+            <a href="#">Terms of Use</a>
         </div>
         <div class="footer-col">
-            <h4>Contact</h4>
-            <a href="#">Support Center</a>
-            <a href="#">Email Dev</a>
+            <h4>Connect</h4>
+            <a href="#">GitHub Repo</a>
             <a href="#">Twitter / X</a>
+            <a href="#">Email Support</a>
         </div>
     </div>
-    <div style="text-align:center; margin-top:40px; color:#222; font-size:12px;">
-        © 2026 RecordDrop. Dedicated to local-first privacy.
+    <div style="text-align:center; margin-top:50px; color:#222; font-size:11px;">
+        © 2026 RecordDrop. Built for teams who respect their own time.
         <br><br>
-        <input type="password" id="apiKey" placeholder="Paste DeepSeek Key to enable Real AI" style="background:#111; border:1px solid #222; color:#444; padding:5px; width:200px; font-size:10px;">
+        <input type="password" id="apiKey" placeholder="Paste DeepSeek Key to enable Real AI" style="background:#111; border:1px solid #222; color:#444; padding:6px; width:220px; font-size:10px; border-radius:4px;">
     </div>
 </footer>
 
 <script>
 let mediaRecorder, chunks = [], actionLog = [], startTime;
 
-async function startLab() {
-    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-    mediaRecorder = new MediaRecorder(stream);
-    chunks = []; actionLog = []; startTime = Date.now();
-
-    window.onclick = (e) => {
+// 改进的点击追踪
+window.addEventListener('mousedown', (e) => {
+    if(mediaRecorder && mediaRecorder.state === 'recording') {
+        const targetDesc = e.target.innerText?.substring(0, 30) || e.target.tagName || 'Element';
         actionLog.push({ 
             time: Math.floor((Date.now()-startTime)/1000), 
-            action: 'Click', 
-            target: e.target.innerText || e.target.tagName 
+            action: 'User clicked', 
+            target: targetDesc.trim() 
         });
-    };
+        console.log("Logged Click:", targetDesc);
+    }
+}, true);
 
-    mediaRecorder.ondataavailable = e => chunks.push(e.data);
-    mediaRecorder.onstop = finalize;
-    mediaRecorder.start();
+async function startLab() {
+    try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        chunks = []; actionLog = []; startTime = Date.now();
 
-    document.getElementById('startBtn').style.display = 'none';
-    document.getElementById('stopBtn').style.display = 'inline-block';
+        mediaRecorder.ondataavailable = e => chunks.push(e.data);
+        mediaRecorder.onstop = finalize;
+        mediaRecorder.start();
+
+        document.getElementById('startBtn').style.display = 'none';
+        document.getElementById('stopBtn').style.display = 'inline-block';
+        document.getElementById('recStatus').style.display = 'block';
+    } catch(e) {
+        alert("Permission denied or error.");
+    }
 }
 
 function stopLab() {
     mediaRecorder.stop();
     document.getElementById('stopBtn').style.display = 'none';
+    document.getElementById('recStatus').style.display = 'none';
 }
 
 async function finalize() {
@@ -177,23 +222,30 @@ async function finalize() {
     document.getElementById('preview').src = URL.createObjectURL(blob);
     document.getElementById('resLayout').classList.add('active');
     
-    // 自动下载视频
-    const a = document.createElement('a'); a.href = document.getElementById('preview').src; a.download = 'sop-video.webm'; a.click();
+    // 自动保存视频到本地
+    const a = document.createElement('a'); 
+    a.href = document.getElementById('preview').src; 
+    a.download = `SOP-Recording-${Date.now()}.webm`; 
+    a.click();
 
-    // AI 生成逻辑
     const key = document.getElementById('apiKey').value;
     const stepsDiv = document.getElementById('sopSteps');
+    
     if(key) {
-        stepsDiv.innerText = "✨ AI is analyzing your workflow...";
-        // 此处你可以接入真正的 API 调用逻辑
+        stepsDiv.innerHTML = "✨ AI is analyzing your workflow actions...";
+        // 此处接入真正的后端调用 /api/generate
     } else {
+        // 演示逻辑
         setTimeout(() => {
-            stepsDiv.innerHTML = `
-                <div class="sop-step"><b>Step 1:</b> Initialized recording and prepared environment.</div>
-                <div class="sop-step"><b>Step 2:</b> Performed target actions (Captured ${actionLog.length} clicks).</div>
-                <div class="sop-step"><b>Step 3:</b> Finalized workflow and generated documentation.</div>
-                <p style="font-size:10px; color:blue;">(Demo Mode: Paste API Key for real details)</p>
-            `;
+            stepsDiv.innerHTML = actionLog.length > 0 ? 
+                actionLog.map((log, index) => `
+                    <div class="sop-step">
+                        <div class="step-label">Step ${index + 1} - ${log.time}s</div>
+                        <div class="step-text">${log.action}: "${log.target}"</div>
+                        <div class="step-desc" contenteditable="true">AI analysis: System detected a key interaction here. Please describe the purpose.</div>
+                    </div>
+                `).join('') :
+                `<div style="color:#888;">No clicks captured. Try clicking on elements during recording!</div>`;
         }, 1500);
     }
 }
@@ -201,11 +253,12 @@ async function finalize() {
 function postMsg() {
     const txt = document.getElementById('userIn').value;
     if(!txt) return;
+    const list = document.getElementById('msgList');
     const div = document.createElement('div');
     div.className = 'msg-item';
-    div.innerHTML = `<span class="user-name">You:</span> ${txt}`;
-    document.getElementById('msgList').appendChild(div);
-    document.getElementById('msgList').scrollTop = document.getElementById('msgList').scrollHeight;
+    div.innerHTML = `<span class="user-tag">You:</span> ${txt}`;
+    list.appendChild(div);
+    list.scrollTop = list.scrollHeight;
     document.getElementById('userIn').value = '';
 }
 </script>
