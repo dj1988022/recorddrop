@@ -3,194 +3,492 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RecordDrop AI — Record Screen & Generate SOP Documents Automatically</title>
+    <meta name="description" content="The best Loom alternative for documentation. Capture your screen locally and let AI write professional step-by-step SOPs and manuals. No cloud required.">
     
-    <!-- 1. 谷歌 SEO (不可见，但对排名至关重要) -->
-    <title>RecordDrop AI - Turn Screen Recording into SOPs & Documentation</title>
-    <meta name="description" content="The easiest Loom alternative. Record your screen and get an AI-generated step-by-step SOP instantly. Save locally, share securely.">
-    <meta name="keywords" content="AI SOP, Screen Recorder, Documentation Tool, Loom Alternative, Process Mapping">
-
     <style>
-        :root { --primary: #007aff; --bg: #0a0a0a; --card: #161616; --text: #e5e5e5; }
+        :root { --primary: #007aff; --bg: #0a0a0a; --card: #161616; --text: #e5e5e5; --danger: #ff3b30; --success: #34c759; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
 
-        /* 顶部导航 */
-        nav { max-width: 1200px; margin: 0 auto; padding: 25px 20px; display: flex; justify-content: space-between; align-items: center; }
-        .logo { font-weight: 800; font-size: 24px; color: #fff; text-decoration: none; }
-        .nav-links a { color: #888; text-decoration: none; margin-left: 20px; font-size: 14px; }
+        /* 顶部栏 */
+        .top-bar { background: #111; border-bottom: 1px solid #222; padding: 10px 20px; font-size: 12px; position: sticky; top: 0; z-index: 1000; }
+        .top-content { max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        
+        nav { max-width: 1100px; margin: 0 auto; padding: 25px 20px; display: flex; justify-content: space-between; align-items: center; }
+        .logo { font-weight: 800; font-size: 24px; letter-spacing: -1px; }
+        .nav-links a { color: #aaa; text-decoration: none; margin-left: 20px; font-size: 14px; transition: 0.3s; }
+        .nav-links a:hover { color: var(--primary); }
 
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .container { max-width: 1100px; margin: 0 auto; padding: 20px; }
 
-        /* 录制区 */
-        .work-card { background: var(--card); border: 1px solid #222; border-radius: 24px; padding: 60px 40px; text-align: center; margin-bottom: 40px; }
-        .btn-main { background: #ff3b30; color: white; border: none; padding: 18px 45px; border-radius: 14px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .btn-main:hover { transform: scale(1.05); }
-        .btn-stop { background: #fff !important; color: #000 !important; display: none; }
+        /* 核心工作区 */
+        .hero-section { text-align: center; padding: 40px 0; }
+        h1 { font-size: 3rem; margin-bottom: 15px; background: linear-gradient(135deg, #fff, #888); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .work-card { background: var(--card); border: 1px solid #222; border-radius: 24px; padding: 60px 40px; text-align: center; margin-bottom: 40px; position: relative; overflow: hidden; }
+        
+        /* 录制状态覆盖层 */
+        .recording-overlay { display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(4px); z-index: 10; flex-direction: column; align-items: center; justify-content: center; gap: 20px; }
+        .recording-overlay.active { display: flex; }
+        .rec-indicator { display: flex; align-items: center; gap: 10px; font-size: 1.2rem; font-weight: bold; color: var(--danger); }
+        .rec-dot { width: 12px; height: 12px; background: var(--danger); border-radius: 50%; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.5; transform: scale(1.2); } }
+        .rec-timer { font-size: 3rem; font-weight: 200; font-variant-numeric: tabular-nums; color: #fff; }
+        .rec-controls { display: flex; gap: 12px; margin-top: 10px; }
+        .rec-btn { border: none; padding: 12px 28px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+        .rec-btn:hover { transform: translateY(-2px); }
+        .rec-btn-stop { background: var(--danger); color: white; }
+        .rec-btn-pause { background: #333; color: #fff; }
+        .rec-btn-resume { background: var(--success); color: #000; }
+        
+        .btn-main { background: var(--danger); color: white; border: none; padding: 18px 50px; border-radius: 14px; font-size: 1.2rem; font-weight: bold; cursor: pointer; transition: 0.3s; box-shadow: 0 10px 30px rgba(255,59,48,0.3); }
+        .btn-main:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(255,59,48,0.5); }
+        
+        .btn-secondary { background: #222; color: #fff; border: 1px solid #333; padding: 10px 24px; border-radius: 10px; font-size: 13px; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .btn-secondary:hover { border-color: #555; }
 
-        /* 结果布局 (左右并排) */
-        .result-layout { display: none; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 30px; }
+        /* 结果展示布局 */
+        .result-layout { display: none; grid-template-columns: 1.2fr 1fr; gap: 40px; margin-top: 20px; animation: fadeIn 0.5s ease; }
         .result-layout.active { display: grid; }
-        video { width: 100%; border-radius: 16px; border: 1px solid #333; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        video { width: 100%; border-radius: 16px; border: 1px solid #333; background: #000; }
 
-        /* 分享链接框 */
-        .share-box { background: #111; border: 1px solid #222; border-radius: 12px; padding: 15px; margin-top: 20px; display: flex; align-items: center; justify-content: space-between; }
-        .share-link { color: var(--primary); font-size: 13px; text-decoration: none; overflow: hidden; text-overflow: ellipsis; }
+        .sop-paper { background: #fff; color: #1a1a1a; border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        .sop-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        .sop-title { color: #000; font-size: 18px; font-weight: 700; }
+        .sop-actions { display: flex; gap: 8px; }
+        .sop-btn { font-size: 12px; padding: 6px 14px; border: 1px solid #ddd; background: #fff; border-radius: 6px; cursor: pointer; transition: 0.2s; }
+        .sop-btn:hover { background: #f5f5f5; }
+        
+        .sop-step { border-left: 3px solid var(--primary); padding-left: 15px; margin-bottom: 20px; position: relative; animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-10px); } to { opacity: 1; transform: translateX(0); } }
+        .step-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+        .step-label { font-weight: 800; font-size: 11px; color: var(--primary); text-transform: uppercase; letter-spacing: 0.5px; }
+        .step-time { font-size: 11px; color: #999; font-variant-numeric: tabular-nums; }
+        .step-text { font-weight: 600; font-size: 15px; color: #1a1a1a; margin-top: 2px; line-height: 1.4; }
+        .step-desc { font-size: 13px; color: #666; margin-top: 6px; outline: none; padding: 4px; border-radius: 4px; transition: 0.2s; }
+        .step-desc:hover { background: #f9f9f9; }
+        .step-desc:focus { background: #f0f7ff; outline: 2px solid var(--primary); }
+        .step-delete { position: absolute; right: 0; top: 0; color: #ccc; font-size: 16px; cursor: pointer; padding: 4px; line-height: 1; }
+        .step-delete:hover { color: var(--danger); }
 
-        /* SOP 纸张样式 */
-        .sop-paper { background: #fff; color: #1a1a1a; border-radius: 16px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); text-align: left; }
-        .sop-step { border-left: 3px solid var(--primary); padding-left: 15px; margin-bottom: 20px; }
-        .step-label { font-weight: 800; font-size: 11px; color: var(--primary); text-transform: uppercase; }
-        .step-title { font-weight: 700; font-size: 16px; }
+        .empty-state { color: #888; font-style: italic; text-align: center; padding: 40px 20px; }
+        
+        .action-log-preview { margin-top: 15px; background: #000; border: 1px solid #222; border-radius: 10px; padding: 12px; max-height: 120px; overflow-y: auto; }
+        .action-log-preview h4 { font-size: 11px; color: #666; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+        .log-item { font-size: 12px; color: #888; padding: 3px 0; border-bottom: 1px solid #111; font-family: 'SF Mono', Monaco, monospace; }
+        .log-item:last-child { border-bottom: none; }
 
-        /* 谷歌收录可见文案区 */
-        .seo-content { margin-top: 80px; padding-top: 60px; border-top: 1px solid #222; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 30px; }
-        .seo-item h3 { color: #fff; margin-bottom: 15px; font-size: 1.1rem; }
-        .seo-item p { color: #666; font-size: 0.9rem; }
+        /* 打印优化 */
+        @media print {
+            body * { visibility: hidden; }
+            .sop-paper, .sop-paper * { visibility: visible; }
+            .sop-paper { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; border-radius: 0; }
+            .step-delete, .sop-actions { display: none !important; }
+        }
 
-        footer { text-align: center; padding: 60px 0; border-top: 1px solid #222; margin-top: 80px; color: #333; font-size: 12px; }
-        input[type="password"] { background: #111; border: 1px solid #222; color: #444; padding: 5px; border-radius: 4px; width: 200px; }
+        @media (max-width: 768px) { 
+            .result-layout { grid-template-columns: 1fr; } 
+            h1 { font-size: 2rem; }
+            .rec-timer { font-size: 2rem; }
+        }
     </style>
 </head>
 <body>
 
 <nav>
-    <a href="/" class="logo">RecordDrop<span style="color:var(--primary)">.AI</span></a>
+    <div class="logo">RecordDrop<span style="color:var(--primary)">.AI</span></div>
     <div class="nav-links">
-        <a href="#how">How it works</a>
-        <a href="#" onclick="window.print()">Export PDF</a>
-        <a href="#" style="color:#f59e0b; font-weight:bold;">PRO $29</a>
+        <a href="#test">Test Lab</a>
     </div>
 </nav>
 
-<div class="container">
-    <div class="work-card">
-        <h1 style="margin-bottom: 15px;">Record Actions. Get SOPs.</h1>
-        <p style="color:#666; margin-bottom: 30px;">Record your workflow once. Our AI drafts the documentation for you instantly.</p>
+<div class="container" id="test">
+    <div class="hero-section">
+        <h1>Your Expertise, Automated.</h1>
+        <p style="color:#666; font-size:1.2rem; max-width:700px; margin: 0 auto 30px;">Record any software workflow. Our AI drafts the Step-by-Step manual for you instantly.</p>
         
-        <div id="recStatus" style="display:none; color:#ff3b30; font-weight:bold; margin-bottom:15px; animation: pulse 1s infinite;">● Capturing Actions...</div>
-        <button class="btn-main" id="startBtn" onclick="startLab()">Start Recording</button>
-        <button class="btn-main btn-stop" id="stopBtn" onclick="stopLab()">Finish & Generate SOP</button>
+        <div class="work-card" id="workCard">
+            <!-- 录制覆盖层 -->
+            <div class="recording-overlay" id="recOverlay">
+                <div class="rec-indicator">
+                    <div class="rec-dot"></div>
+                    <span>Recording</span>
+                </div>
+                <div class="rec-timer" id="recTimer">00:00</div>
+                <div class="rec-controls">
+                    <button class="rec-btn rec-btn-pause" id="pauseBtn" onclick="togglePause()">Pause</button>
+                    <button class="rec-btn rec-btn-stop" onclick="stopLab()">Finish & Get SOP</button>
+                </div>
+                <p style="color:#666; font-size:12px; margin-top:10px;">Click anywhere on your screen to capture actions</p>
+            </div>
+
+            <!-- 初始状态 -->
+            <div id="idleState">
+                <button class="btn-main" id="startBtn" onclick="startLab()">Start Capture SOP</button>
+                <p style="margin-top:20px; font-size:12px; color:#444;">Works locally. No video is uploaded.</p>
+            </div>
+        </div>
     </div>
 
-    <!-- 结果展示区 -->
+    <!-- 结果展示 -->
     <div class="result-layout" id="resLayout">
-        <!-- 左侧：视频与分享 -->
-        <div class="video-side">
+        <div>
+            <h3 style="margin-bottom:15px;">1. Workflow Video</h3>
             <video id="preview" controls></video>
+            <button class="btn-secondary" onclick="resetAll()" style="margin-top:15px;">🔄 New Recording</button>
             
-            <div class="share-box">
-                <a href="#" id="shareLink" class="share-link">https://recorddrop.site/share/loading...</a>
-                <button onclick="copyShare()" style="background:#222; color:#ccc; border:none; padding:5px 10px; border-radius:6px; cursor:pointer; font-size:11px;">Copy Link</button>
-            </div>
-
-            <div style="margin-top:20px; display:flex; gap:10px;">
-                <button onclick="window.open('https://twitter.com/intent/tweet?text=Check out my SOP!')" style="background:#1da1f2; color:#fff; border:none; padding:8px 15px; border-radius:8px; cursor:pointer; flex:1; font-size:12px;">Share on Twitter</button>
-                <button onclick="alert('Experimental: Execution Script Generated!')" style="background:#222; color:#4ade80; border:1px dashed #4ade80; padding:8px 15px; border-radius:8px; cursor:pointer; flex:1; font-size:12px;">🤖 Semi-auto Script</button>
+            <!-- 原始点击日志（调试用，可折叠） -->
+            <div class="action-log-preview" id="logPreview" style="display:none;">
+                <h4>Raw Action Log</h4>
+                <div id="logContent"></div>
             </div>
         </div>
-
-        <!-- 右侧：AI 文档 -->
-        <div class="sop-paper">
-            <h3 style="margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:10px;">Standard Operating Procedure</h3>
+        
+        <div class="sop-paper" id="sopPaper">
+            <div class="sop-header">
+                <div class="sop-title">📋 AI Generated SOP</div>
+                <div class="sop-actions">
+                    <button class="sop-btn" onclick="addManualStep()">+ Add Step</button>
+                    <button class="sop-btn" onclick="window.print()">Export PDF</button>
+                </div>
+            </div>
             <div id="sopSteps">
-                <p style="color:#888;">AI is drafting based on your clicks...</p>
+                <div class="empty-state">Analyzing your workflow...</div>
             </div>
-            <button onclick="window.print()" style="margin-top:20px; width:100%; padding:10px; background:var(--primary); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">Export Professional PDF</button>
-        </div>
-    </div>
-
-    <!-- 谷歌收录可见文案区 (SEO) -->
-    <div class="seo-content" id="how">
-        <div class="seo-item">
-            <h3>Why AI SOP?</h3>
-            <p>Traditional screen recordings are too long to watch. RecordDrop extracts key steps so your team can read the instructions in 30 seconds.</p>
-        </div>
-        <div class="seo-item">
-            <h3>Local-First Security</h3>
-            <p>Your video is saved directly to your browser/disk. No third-party server sees your data unless you choose to share it.</p>
-        </div>
-        <div class="seo-item">
-            <h3>Automated Documentation</h3>
-            <p>Stop taking manual screenshots. Our AI detects clicks and transitions to build a candidate manual for your review.</p>
         </div>
     </div>
 </div>
 
-<footer>
-    <p>© 2026 RecordDrop AI · Built for Efficiency</p>
-    <div style="margin-top:20px;">
-        <input type="password" id="apiKey" placeholder="Paste DeepSeek Key for Real AI">
-    </div>
-</footer>
-
 <script>
-let mediaRecorder, chunks = [], actionLog = [], startTime;
+// ==================== 状态管理 ====================
+const AppState = {
+    mediaRecorder: null,
+    chunks: [],
+    actionLog: [],
+    startTime: null,
+    pausedTime: 0,
+    lastPauseTime: null,
+    isPaused: false,
+    stream: null,
+    objectUrl: null,
+    timerInterval: null
+};
 
-async function startLab() {
-    const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-    mediaRecorder = new MediaRecorder(stream);
-    chunks = []; actionLog = []; startTime = Date.now();
+// ==================== 工具函数 ====================
+const $ = id => document.getElementById(id);
+const formatTime = ms => {
+    const totalSeconds = Math.floor(ms / 1000);
+    const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
+    const s = (totalSeconds % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
+};
 
-    // 动作监听 (为了给未来的自动化做准备)
-    window.onclick = (e) => {
-        if(mediaRecorder.state === 'recording') {
-            actionLog.push({ time: Math.floor((Date.now()-startTime)/1000), target: e.target.innerText || e.target.tagName });
-        }
+// 智能元素描述生成
+function describeElement(el) {
+    if (!el) return 'Unknown element';
+    
+    // 优先获取有意义的文本
+    const text = (el.innerText || el.textContent || '').trim().substring(0, 40);
+    const ariaLabel = el.getAttribute('aria-label');
+    const placeholder = el.getAttribute('placeholder');
+    const title = el.getAttribute('title');
+    const role = el.getAttribute('role');
+    
+    // 构建路径
+    const tag = el.tagName.toLowerCase();
+    const id = el.id ? `#${el.id}` : '';
+    const cls = el.className && typeof el.className === 'string' ? 
+        `.${el.className.split(' ')[0]}` : '';
+    
+    let type = 'element';
+    if (tag === 'button' || role === 'button' || el.type === 'button') type = 'button';
+    else if (tag === 'a' || role === 'link') type = 'link';
+    else if (tag === 'input') type = `${el.type || 'input'} field`;
+    else if (tag === 'select') type = 'dropdown';
+    else if (tag === 'textarea') type = 'text area';
+    else if (tag === 'img') type = 'image';
+    else if (tag === 'svg' || el.closest('svg')) type = 'icon';
+    else if (text.length > 0 && text.length < 30) type = `"${text}"`;
+    
+    const readable = ariaLabel || placeholder || title || text || `${tag}${id || cls}`;
+    return { type, readable: readable.substring(0, 50), tag, path: `${tag}${id}${cls}` };
+}
+
+// 根据点击生成合理的步骤描述
+function generateStepDescription(action) {
+    const { type, readable } = action.target;
+    const templates = {
+        'button': [`Click the "${readable}" button to proceed.`, `Press the ${type} labeled "${readable}".`],
+        'link': [`Navigate by clicking the "${readable}" link.`, `Open the "${readable}" page.`],
+        'text field': [`Click into the ${type} to enter text.`, `Focus the input field${readable ? ` (${readable})` : ''}.`],
+        'password field': [`Click into the password field to enter credentials.`, `Focus the secure input field.`],
+        'dropdown': [`Open the "${readable}" dropdown menu.`, `Click to expand the selection list.`],
+        'image': [`Click on the image${readable ? ` showing "${readable}"` : ''}.`, `Interact with the visual element.`],
+        'icon': [`Click the icon${readable ? ` for "${readable}"` : ''}.`, `Press the control icon.`]
     };
-
-    mediaRecorder.ondataavailable = e => chunks.push(e.data);
-    mediaRecorder.onstop = finalize;
-    mediaRecorder.start();
-
-    document.getElementById('startBtn').style.display = 'none';
-    document.getElementById('stopBtn').style.display = 'inline-block';
-    document.getElementById('recStatus').style.display = 'block';
+    
+    const defaults = [
+        `Click on the ${type}: "${readable}"`,
+        `Interact with ${type} element "${readable}"`,
+        `Select the ${type} labeled "${readable}"`
+    ];
+    
+    const pool = templates[type] || defaults;
+    return pool[Math.floor(Math.random() * pool.length)];
 }
 
-function stopLab() {
-    mediaRecorder.stop();
-    document.getElementById('stopBtn').style.display = 'none';
-    document.getElementById('recStatus').style.display = 'none';
-}
-
-async function finalize() {
-    const blob = new Blob(chunks, { type: 'video/webm' });
-    const url = URL.createObjectURL(blob);
-    document.getElementById('preview').src = url;
-    document.getElementById('resLayout').classList.add('active');
-    
-    // 自动更新分享链接
-    const shareID = Math.random().toString(36).substring(7);
-    document.getElementById('shareLink').innerText = `https://recorddrop.site/share/${shareID}`;
-    document.getElementById('shareLink').href = url;
-
-    // AI 逻辑
-    const key = document.getElementById('apiKey').value;
-    const stepsDiv = document.getElementById('sopSteps');
-    
-    if(key) {
-        stepsDiv.innerHTML = "<p>✨ AI is analyzing...</p>";
-        // 此处调用真实 API
-    } else {
-        // 演示逻辑：模拟 AI 提取
-        setTimeout(() => {
-            stepsDiv.innerHTML = actionLog.length > 0 ? 
-                actionLog.map((log, i) => `
-                    <div class="sop-step">
-                        <div class="step-label">Step ${i+1}</div>
-                        <div class="step-title">User clicked "${log.target}"</div>
-                        <div style="font-size:12px; color:#666;" contenteditable="true">AI Detail: Perform this action to proceed with the workflow.</div>
-                    </div>
-                `).join('') :
-                `<div class="sop-step"><div class="step-label">Step 1</div><div class="step-title">Initial Setup</div><div style="font-size:12px; color:#666;">Opened the dashboard and prepared the environment.</div></div>`;
-        }, 1500);
+// ==================== 录制核心 ====================
+async function startLab() {
+    try {
+        const stream = await navigator.mediaDevices.getDisplayMedia({ 
+            video: { cursor: 'always' }, 
+            audio: false 
+        });
+        
+        AppState.stream = stream;
+        AppState.mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+        AppState.chunks = [];
+        AppState.actionLog = [];
+        AppState.startTime = Date.now();
+        AppState.pausedTime = 0;
+        AppState.isPaused = false;
+        
+        AppState.mediaRecorder.ondataavailable = e => {
+            if (e.data.size > 0) AppState.chunks.push(e.data);
+        };
+        
+        AppState.mediaRecorder.onstop = finalize;
+        AppState.mediaRecorder.start(1000); // 每秒收集一次，防止丢数据
+        
+        // UI 切换
+        $('idleState').style.display = 'none';
+        $('recOverlay').classList.add('active');
+        $('resLayout').classList.remove('active');
+        
+        // 启动计时器
+        AppState.timerInterval = setInterval(updateTimer, 100);
+        
+        // 监听视频轨道结束（用户点了浏览器自带的"停止共享"）
+        stream.getVideoTracks()[0].onended = () => {
+            if (AppState.mediaRecorder && AppState.mediaRecorder.state === 'recording') {
+                stopLab();
+            }
+        };
+        
+    } catch(e) {
+        console.error('Recording failed:', e);
+        alert('Could not start recording. Please allow screen capture permission.');
     }
 }
 
-function copyShare() {
-    const link = document.getElementById('shareLink').innerText;
-    navigator.clipboard.writeText(link).then(() => alert("Share Link Copied!"));
+function updateTimer() {
+    if (AppState.isPaused) return;
+    const elapsed = Date.now() - AppState.startTime - AppState.pausedTime;
+    $('recTimer').textContent = formatTime(elapsed);
 }
+
+function togglePause() {
+    const btn = $('pauseBtn');
+    if (!AppState.isPaused) {
+        // 暂停
+        AppState.mediaRecorder.pause();
+        AppState.lastPauseTime = Date.now();
+        AppState.isPaused = true;
+        btn.textContent = 'Resume';
+        btn.classList.remove('rec-btn-pause');
+        btn.classList.add('rec-btn-resume');
+        document.querySelector('.rec-dot').style.animationPlayState = 'paused';
+    } else {
+        // 继续
+        AppState.mediaRecorder.resume();
+        AppState.pausedTime += Date.now() - AppState.lastPauseTime;
+        AppState.isPaused = false;
+        btn.textContent = 'Pause';
+        btn.classList.remove('rec-btn-resume');
+        btn.classList.add('rec-btn-pause');
+        document.querySelector('.rec-dot').style.animationPlayState = 'running';
+    }
+}
+
+function stopLab() {
+    if (AppState.mediaRecorder && AppState.mediaRecorder.state !== 'inactive') {
+        AppState.mediaRecorder.stop();
+        // 停止所有轨道
+        AppState.stream.getTracks().forEach(t => t.stop());
+    }
+    clearInterval(AppState.timerInterval);
+    $('recOverlay').classList.remove('active');
+    $('idleState').style.display = 'block';
+}
+
+// ==================== 点击追踪 ====================
+window.addEventListener('mousedown', (e) => {
+    if (!AppState.mediaRecorder || AppState.mediaRecorder.state !== 'recording' || AppState.isPaused) return;
+    
+    const target = describeElement(e.target);
+    const elapsed = Date.now() - AppState.startTime - AppState.pausedTime;
+    
+    const action = {
+        time: Math.floor(elapsed / 1000),
+        timestamp: new Date().toISOString(),
+        action: 'click',
+        target: target,
+        coordinates: { x: e.clientX, y: e.clientY }
+    };
+    
+    AppState.actionLog.push(action);
+    console.log('🎯 Action logged:', action);
+}, true);
+
+// ==================== 结果生成 ====================
+function finalize() {
+    if (AppState.chunks.length === 0) {
+        alert('No video data captured. Please try again.');
+        resetAll();
+        return;
+    }
+    
+    const blob = new Blob(AppState.chunks, { type: 'video/webm' });
+    
+    // 释放旧的 URL
+    if (AppState.objectUrl) URL.revokeObjectURL(AppState.objectUrl);
+    AppState.objectUrl = URL.createObjectURL(blob);
+    
+    $('preview').src = AppState.objectUrl;
+    $('resLayout').classList.add('active');
+    
+    // 自动下载视频
+    const a = document.createElement('a');
+    a.href = AppState.objectUrl;
+    a.download = `SOP-Recording-${Date.now()}.webm`;
+    a.click();
+    
+    // 生成 SOP
+    generateSOP();
+    
+    // 显示调试日志
+    if (AppState.actionLog.length > 0) {
+        $('logPreview').style.display = 'block';
+        $('logContent').innerHTML = AppState.actionLog.map((log, i) => 
+            `<div class="log-item">[${formatTime(log.time * 1000)}] ${log.target.type}: ${log.target.readable}</div>`
+        ).join('');
+    }
+}
+
+function generateSOP() {
+    const container = $('sopSteps');
+    
+    if (AppState.actionLog.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div style="font-size:40px; margin-bottom:10px;">🎥</div>
+                No clicks were captured during recording.<br>
+                <span style="font-size:12px; color:#999;">Try interacting with buttons, links, or forms while recording.</span>
+            </div>
+        `;
+        return;
+    }
+    
+    // 合并连续相同目标的点击（去重/防抖）
+    const deduped = [];
+    AppState.actionLog.forEach((action, i) => {
+        const last = deduped[deduped.length - 1];
+        if (last && last.target.readable === action.target.readable && action.time - last.time < 3) {
+            // 3秒内重复点击同一元素，视为一次操作
+            return;
+        }
+        deduped.push(action);
+    });
+    
+    container.innerHTML = deduped.map((log, index) => {
+        const desc = generateStepDescription(log);
+        return `
+            <div class="sop-step" data-index="${index}">
+                <span class="step-delete" onclick="deleteStep(this)" title="Remove step">×</span>
+                <div class="step-header">
+                    <span class="step-label">Step ${index + 1}</span>
+                    <span class="step-time">${formatTime(log.time * 1000)}</span>
+                </div>
+                <div class="step-text">${desc}</div>
+                <div class="step-desc" contenteditable="true" spellcheck="false">Click to edit description...</div>
+            </div>
+        `;
+    }).join('');
+}
+
+function deleteStep(el) {
+    el.closest('.sop-step').remove();
+    // 重新编号
+    document.querySelectorAll('.sop-step').forEach((step, i) => {
+        step.querySelector('.step-label').textContent = `Step ${i + 1}`;
+    });
+}
+
+function addManualStep() {
+    const container = $('sopSteps');
+    const steps = container.querySelectorAll('.sop-step');
+    const idx = steps.length + 1;
+    
+    const div = document.createElement('div');
+    div.className = 'sop-step';
+    div.innerHTML = `
+        <span class="step-delete" onclick="deleteStep(this)" title="Remove step">×</span>
+        <div class="step-header">
+            <span class="step-label">Step ${idx}</span>
+            <span class="step-time">--:--</span>
+        </div>
+        <div class="step-text" contenteditable="true">Click to edit step title...</div>
+        <div class="step-desc" contenteditable="true" spellcheck="false">Click to edit description...</div>
+    `;
+    container.appendChild(div);
+}
+
+// ==================== 重置 ====================
+function resetAll() {
+    // 释放资源
+    if (AppState.objectUrl) {
+        URL.revokeObjectURL(AppState.objectUrl);
+        AppState.objectUrl = null;
+    }
+    if (AppState.stream) {
+        AppState.stream.getTracks().forEach(t => t.stop());
+    }
+    if (AppState.timerInterval) {
+        clearInterval(AppState.timerInterval);
+    }
+    
+    // 重置状态
+    AppState.mediaRecorder = null;
+    AppState.chunks = [];
+    AppState.actionLog = [];
+    AppState.startTime = null;
+    AppState.pausedTime = 0;
+    AppState.isPaused = false;
+    
+    // 重置 UI
+    $('preview').src = '';
+    $('resLayout').classList.remove('active');
+    $('recOverlay').classList.remove('active');
+    $('idleState').style.display = 'block';
+    $('recTimer').textContent = '00:00';
+    $('pauseBtn').textContent = 'Pause';
+    $('pauseBtn').classList.remove('rec-btn-resume');
+    $('pauseBtn').classList.add('rec-btn-pause');
+    $('logPreview').style.display = 'none';
+    $('sopSteps').innerHTML = '<div class="empty-state">Analyzing your workflow...</div>';
+    
+    // 滚动到顶部
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// 页面卸载前清理
+window.addEventListener('beforeunload', () => {
+    if (AppState.objectUrl) URL.revokeObjectURL(AppState.objectUrl);
+    if (AppState.stream) AppState.stream.getTracks().forEach(t => t.stop());
+});
 </script>
 </body>
 </html>
